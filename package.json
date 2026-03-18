@@ -1,0 +1,25 @@
+{
+  "name": "lobsterops",
+  "version": "1.0.0",
+  "description": "AI Agent Observability & Debug Console - Flight recorder and debug console for AI agents",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/noeldelisle/LobsterOps.git"
+  },
+  "keywords": [],
+  "author": "Lobster Actual",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/noeldelisle/LobsterOps/issues"
+  },
+  "homepage": "https://github.com/noeldelisle/LobsterOps#readme",
+  "devDependencies": {
+    "jest": "^30.3.0"
+  }
+}
