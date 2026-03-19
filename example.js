@@ -10,11 +10,11 @@ async function runExample() {
   console.log('====================');
   
   // Create a LobsterOps instance
-  // Using JSON file storage - zero dependencies, works anywhere!
+  // Using SQLite storage - lightweight, file-based, works everywhere
   const ops = new LobsterOps({
-    storageType: 'json',           // Options: 'json', 'memory', 'sqlite', 'supabase' (coming soon)
+    storageType: 'sqlite',           // Options: 'json', 'memory', 'sqlite', 'supabase' (coming soon)
     storageConfig: {
-      dataDir: './example-logs'    // Where to store JSON log files
+      filename: './example-lobsterops.db' // SQLite database file
     },
     instanceId: 'example-agent-001' // Optional: custom instance ID
   });
@@ -119,12 +119,13 @@ async function runExample() {
     const stats = await ops.getStats();
     console.log(`\n📊 Storage Statistics:`);
     console.log(`   Backend: ${stats.backend}`);
-    console.log(`   Total Events: ${stats.totalEvents || 0}`);
-    console.log(`   Data Directory: ${stats.dataDir}`);
+    console.log(`   Total Events: ${stats.eventCount || 0}`);
+    console.log(`   Database File: ${stats.filename}`);
+    console.log(`   Database Size: ${stats.databaseSizeMB} MB`);
     console.log(`   Instance ID: ${stats.instanceId}`);
     
     console.log(`\n✅ Example completed successfully!`);
-    console.log(`💡 Try checking the './example-logs' directory to see the JSON log files.`);
+    console.log(`💡 Try checking the './example-lobsterops.db' SQLite database file.`);
     
   } catch (error) {
     console.error('❌ Example failed:', error);
