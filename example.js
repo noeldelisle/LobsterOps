@@ -12,26 +12,10 @@ async function runExample() {
   // Create a LobsterOps instance
   // Choose your storage backend:
   const ops = new LobsterOps({
-    // storageType: 'json',           // Zero dependency, works everywhere (DEFAULT)
-    // storageConfig: {
-    //   dataDir: './example-logs'    // Where to store JSON log files
-    // },
-    
-    // storageType: 'memory',         // In-memory only (great for testing)
-    // storageConfig: {},            // No config needed
-    
-    storageType: 'sqlite',           // Lightweight file-based SQL
+    storageType: 'sqlite',           // Lightweight file-based SQL (great for Replit)
     storageConfig: {
       filename: './example-lobsterops.db' // SQLite database file
     },
-    
-    // storageType: 'supabase',       // Cloud-based PostgreSQL (UNCOMMENT TO USE)
-    // storageConfig: {
-    //   supabaseUrl: 'YOUR_SUPABASE_URL',      // Get from Supabase project settings
-    //   supabaseKey: 'YOUR_SUPABASE_ANON_KEY', // Get from Supabase project settings
-    //   tableName: 'agent_events'              // Optional: custom table name
-    // },
-    
     instanceId: 'example-agent-001' // Optional: custom instance ID
   });
   
@@ -44,94 +28,132 @@ async function runExample() {
     const stats = await ops.getStats();
     console.log(`📦 Using storage backend: ${stats.backend}`);
     
-    // Simulate logging various agent events
-    console.log('\n📝 Logging agent events...');
+    // Simulate logging various AI agent events using specialized helpers
+    console.log('\n📝 Logging AI agent events...');
     
-    // 1. Agent startup event
-    const startupEventId = await ops.logEvent({
-      type: 'agent-lifecycle',
+    // 1. Agent startup/lifecycle event
+    const lifecycleEventId = await ops.logLifecycle({
       agentId: 'research-agent-alpha',
       action: 'startup',
       status: 'healthy',
       version: '1.2.3',
-      environment: 'production'
+      environment: 'production',
+      host: 'replit-vm-42'
     });
-    console.log(`   Startup event logged: ${startupEventId}`);
+    console.log(`   Lifecycle event logged: ${lifecycleEventId}`);
     
-    // 2. Tool usage event
-    const toolEventId = await ops.logEvent({
-      type: 'tool-usage',
+    // 2. Agent thought/reasoning
+    const thoughtEventId = await ops.logThought({
+      agentId: 'research-agent-alpha',
+      thought: 'Looking at the sales data, I notice Q3 showed unexpected growth in the enterprise segment. This could be due to the new marketing campaign or seasonal factors.',
+      context: 'Analyzing Q4 sales forecast',
+      confidence: 0.8
+    });
+    console.log(`   Thought logged: ${thoughtEventId}`);
+    
+    // 3. Tool usage
+    const toolEventId = await ops.logToolCall({
       agentId: 'research-agent-alpha',
       toolName: 'web-search',
-      toolInput: { query: 'latest AI agent frameworks 2026' },
-      toolOutput: { results: 15, timeMs: 1200 },
-      durationMs: 1250,
-      success: true
+      toolInput: { 
+        query: 'enterprise sales growth Q3 2026 marketing campaign impact',
+        maxResults: 10
+      },
+      toolOutput: { 
+        results: [
+          { title: 'Marketing Campaign ROI Analysis', url: 'https://example.com/roi' },
+          { title: 'Q3 Enterprise Sales Report', url: 'https://example.com/sales-q3' }
+        ],
+        searchTimeMs: 850
+      },
+      durationMs: 900,
+      success: true,
+      cost: 0.002 // Example cost in USD
     });
-    console.log(`   Tool usage event logged: ${toolEventId}`);
+    console.log(`   Tool call logged: ${toolEventId}`);
     
-    // 3. Decision making event
-    const decisionEventId = await ops.logEvent({
-      type: 'agent-decision',
+    // 4. Agent decision
+    const decisionEventId = await ops.logDecision({
       agentId: 'research-agent-alpha',
-      decision: 'proceed-with-research',
-      confidence: 0.87,
-      alternativesConsidered: ['wait-for-more-data', 'escalate-to-human'],
-      reasoning: 'Sufficient data quality and relevance achieved',
-      contextTokens: 2450,
-      responseTokens: 320
+      decision: 'Increase Q4 forecast for enterprise segment by 15%',
+      confidence: 0.85,
+      alternativesConsidered: [
+        'Maintain current forecast',
+        'Decrease forecast due to market uncertainty',
+        'Request additional data collection'
+      ],
+      reasoning: 'Marketing campaign showing positive ROI and early indicators suggest sustained growth',
+      dataSources: ['marketing-analytics', 'sales-crm', 'customer-surveys'],
+      impact: 'high'
     });
-    console.log(`   Decision event logged: ${decisionEventId}`);
+    console.log(`   Decision logged: ${decisionEventId}`);
     
-    // 4. Error event (for demonstration)
-    const errorEventId = await ops.logEvent({
-      type: 'agent-error',
+    // 5. Agent error (for demonstration)
+    const errorEventId = await ops.logError({
       agentId: 'research-agent-alpha',
-      errorType: 'TimeoutError',
-      errorMessage: 'API request to external service timed out',
+      errorType: 'APITimeoutError',
+      errorMessage: 'Request to external analytics API timed out after 30 seconds',
       severity: 'medium',
-      retryCount: 2,
-      recovered: true
+      retryCount: 1,
+      recovered: true,
+      fallbackUsed: 'cached-data'
     });
-    console.log(`   Error event logged: ${errorEventId}`);
+    console.log(`   Error logged: ${errorEventId}`);
     
-    console.log('\n🔍 Querying and analyzing events...');
-    
-    // Query all events for our agent
-    const agentEvents = await ops.queryEvents({
-      agentIds: ['research-agent-alpha'],
-      limit: 10
+    // 6. Spawning a subagent
+    const spawnEventId = await ops.logSpawning({
+      parentAgentId: 'research-agent-alpha',
+      childAgentId: 'data-analyst-agent-001',
+      childAgentType: 'data-analysis',
+      task: 'Analyze correlation between marketing spend and sales velocity',
+      spawnReason: 'Specialized task requiring domain expertise'
     });
-    console.log(`   Found ${agentEvents.length} events for research-agent-alpha`);
+    console.log(`   Spawn event logged: ${spawnEventId}`);
     
-    // Query just tool usage events
-    const toolEvents = await ops.queryEvents({
-      eventTypes: ['tool-usage'],
-      agentIds: ['research-agent-alpha']
-    });
-    console.log(`   Found ${toolEvents.length} tool usage events`);
+    console.log('\n🔍 Querying and analyzing AI agent activity...');
     
-    // Query events from the last hour (assuming recent timestamps)
-    const recentEvents = await ops.queryEvents({
-      limit: 20
+    // Get complete trace of our agent's activity
+    const agentTrace = await ops.getAgentTrace('research-agent-alpha');
+    console.log(`   Agent trace contains ${agentTrace.length} events`);
+    
+    // Get recent thoughts specifically
+    const recentThoughts = await ops.queryEvents({
+      type: 'agent-thought',
+      agentId: 'research-agent-alpha'
     });
-    console.log(`   Found ${recentEvents.length} recent events`);
+    console.log(`   Found ${recentThoughts.length} recent thoughts`);
+    
+    // Get all tool calls
+    const toolCalls = await ops.queryEvents({
+      type: 'tool-call'
+    });
+    console.log(`   Found ${toolCalls.length} tool calls total`);
+    
+    // Get errors that need attention
+    const errors = await ops.queryEvents({
+      type: 'agent-error',
+      severity: ['high', 'medium']
+    });
+    console.log(`   Found ${errors.length} errors requiring attention`);
     
     // Get a specific event by ID
-    const specificEvent = await ops.getEvent(startupEventId);
+    const specificEvent = await ops.getEvent(lifecycleEventId);
     if (specificEvent) {
       console.log(`\n🎯 Specific event details:`);
       console.log(`   Type: ${specificEvent.type}`);
       console.log(`   Agent: ${specificEvent.agentId}`);
       console.log(`   Action: ${specificEvent.action}`);
       console.log(`   Time: ${specificEvent.timestamp}`);
+      if (specificEvent.thought) {
+        console.log(`   Thought: ${specificEvent.thought.substring(0, 100)}...`);
+      }
     }
     
-    // Update an event (add resolution info to error)
+    // Update an error event (mark as resolved)
     await ops.updateEvent(errorEventId, {
       resolved: true,
       resolutionTime: new Date().toISOString(),
-      resolutionNotes: 'Implemented exponential backoff retry strategy'
+      resolutionNotes: 'Increased API timeout to 60 seconds for analytics endpoint'
     });
     console.log(`\n🔄 Updated error event with resolution info`);
     
@@ -150,7 +172,8 @@ async function runExample() {
     console.log(`   Instance ID: ${updatedStats.instanceId}`);
     
     console.log(`\n✅ Example completed successfully!`);
-    console.log(`💡 To use different storage backends, uncomment the desired configuration above.`);
+    console.log(`💡 Try checking the './example-lobsterops.db' SQLite database file.`);
+    console.log(`🔬 LobsterOps is now ready for AI agent observability in your projects!`);
     
   } catch (error) {
     console.error('❌ Example failed:', error);

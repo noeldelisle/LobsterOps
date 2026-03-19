@@ -8,8 +8,9 @@ const { v4: uuidv4 } = require('uuid');
  * Designed to be flexible, dependency-free, and easy to integrate.
  * 
  * Features:
- * - Pluggable storage backends (JSON files, memory, SQLite, Supabase coming soon)
+ * - Pluggable storage backends (JSON files, memory, SQLite, Supabase)
  * - Structured event logging with automatic enrichment
+ * - AI-agent specific logging helpers (thoughts, tool calls, decisions, etc.)
  * - Powerful querying capabilities
  * - OpenClaw integration ready
  * - Zero configuration required to get started
@@ -17,7 +18,7 @@ const { v4: uuidv4 } = require('uuid');
 class LobsterOps {
   /**
    * @param {Object} options - Configuration options
-   * @param {string} options.storageType - Storage backend type ('json', 'memory', etc.)
+   * @param {string} options.storageType - Storage backend type ('json', 'memory', 'sqlite', 'supabase')
    * @param {Object} options.storageConfig - Configuration for the storage backend
    * @param {boolean} options.enabled - Whether LobsterOps is enabled (default: true)
    * @param {string} options.instanceId - Unique identifier for this LobsterOps instance
@@ -36,8 +37,15 @@ class LobsterOps {
     
     // Bind methods for easier use
     this.logEvent = this.logEvent.bind(this);
+    this.logThought = this.logThought.bind(this);
+    this.logToolCall = this.logToolCall.bind(this);
+    this.logDecision = this.logDecision.bind(this);
+    this.logError = this.logError.bind(this);
+    this.logSpawning = this.logSpawning.bind(this);
     this.queryEvents = this.queryEvents.bind(this);
     this.getEvent = this.getEvent.bind(this);
+    this.getAgentTrace = this.getAgentTrace.bind(this);
+    this.getRecentActivity = this.getRecentActivity.bind(this);
   }
 
   /**
@@ -64,7 +72,7 @@ class LobsterOps {
   }
 
   /**
-   * Log an agent event
+   * Log a general agent event
    * @param {Object} event - The agent event to log
    * @param {Object} options - Additional options
    * @returns {Promise<string>} - The ID of the logged event
@@ -95,6 +103,103 @@ class LobsterOps {
     } catch (error) {
       throw new Error(`Failed to log event: ${error.message}`);
     }
+  }
+
+  /**
+   * Log an agent thought/reasoning step
+   * @param {Object} thought - The thought content and metadata
+   * @param {Object} options - Additional options
+   * @returns {Promise<string>} - The ID of the logged thought
+   */
+  async logThought(thought, options = {}) {
+    return this.logEvent({
+      type: 'agent-thought',
+      ...thought
+    }, {
+      category: 'reasoning',
+      ...options
+    });
+  }
+
+  /**
+   * Log a tool call execution
+   * @param {Object} toolCall - Tool call details
+   * @param {Object} options - Additional options
+   * @returns {Promise<string>} - The ID of the logged tool call
+   */
+  async logToolCall(toolCall, options = {}) {
+    return this.logEvent({
+      type: 'tool-call',
+      ...toolCall
+    }, {
+      category: 'action',
+      ...options
+    });
+  }
+
+  /**
+   * Log an agent decision
+   * @param {Object} decision - Decision details
+   * @param {Object} options - Additional options
+   * @returns {Promise<string>} - The ID of the logged decision
+   */
+  async logDecision(decision, options = {}) {
+    return this.logEvent({
+      type: 'agent-decision',
+      ...decision
+    }, {
+      category: 'decision',
+      ...options
+    });
+  }
+
+  /**
+   * Log an agent error
+   * @param {Object} error - Error details
+   * @param {Object} options - Additional options
+   * @returns {Promise<string>} - The ID of the logged error
+   */
+  async logError(error, options = {}) {
+    return this.logEvent({
+      type: 'agent-error',
+      ...error
+    }, {
+      category: 'error',
+      severity: options.severity || 'medium',
+      ...options
+    });
+  }
+
+  /**
+   * Log agent spawning/subagent creation
+   * @param {Object} spawnInfo - Spawning details
+   * @param {Object} options - Additional options
+   * @returns {Promise<string>} - The ID of the logged spawn event
+   */
+  async logSpawning(spawnInfo, options = {}) {
+    return this.logEvent({
+      type: 'agent-spawn',
+      ...spawnInfo
+    }, {
+      category: 'lifecycle',
+      ...options
+    });
+  }
+
+  /**
+   * Log agent lifecycle event (startup, shutdown, etc.)
+   * @param {Object} lifecycleInfo - Lifecycle event details
+   * @param {Object} options - Additional options
+   * @returns {Promise<string>} - The ID of the logged lifecycle event
+   */
+  async logLifecycle(lifecycleInfo, options = {}) {
+    return this.logEvent({
+      type: 'agent-lifecycle',
+      ...lifecycleInfo
+    }, {
+      category: 'lifecycle',
+      ...options
+    });
   }
 
   /**
@@ -200,6 +305,72 @@ class LobsterOps {
       return await this.storage.cleanupOld();
     } catch (error) {
       throw new Error(`Failed to cleanup old events: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get a complete trace of an agent's activity
+   * @param {string} agentId - The ID of the agent to trace
+   * @param {Object} options - Trace options (time range, limit, etc.)
+   * @returns {Promise<Array>} - Chronological trace of agent activity
+   */
+  async getAgentTrace(agentId, options = {}) {
+    if (!this.enabled) {
+      return [];
+    }
+    
+    if (!this.initialized) {
+      await this.init();
+    }
+    
+    try {
+      const traceOptions = {
+        agentIds: [agentId],
+        limit: options.limit || 1000,
+        offset: options.offset || 0,
+        sortBy: 'timestamp',
+        sortOrder: options.sortOrder || 'asc', // Chronological by default for traces
+        ...options
+      };
+      
+      // Remove agentIds from options since we handle it separately
+      delete traceOptions.agentIds;
+      
+      return await this.queryEvents(
+        { agentId },
+        traceOptions
+      );
+    } catch (error) {
+      throw new Error(`Failed to get agent trace: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get recent activity across all agents or for a specific agent
+   * @param {Object} options - Activity options
+   * @returns {Promise<Array>} - Recent events
+   */
+  async getRecentActivity(options = {}) {
+    if (!this.enabled) {
+      return [];
+    }
+    
+    if (!this.initialized) {
+      await this.init();
+    }
+    
+    try {
+      const activityOptions = {
+        limit: options.limit || 50,
+        offset: options.offset || 0,
+        sortBy: 'timestamp',
+        sortOrder: 'desc', // Most recent first
+        ...options
+      };
+      
+      return await this.queryEvents({}, activityOptions);
+    } catch (error) {
+      throw new Error(`Failed to get recent activity: ${error.message}`);
     }
   }
 
