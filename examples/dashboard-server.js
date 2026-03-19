@@ -1,3 +1,7 @@
+/* Requires: npm install express express-session
+ * Credentials loaded from environment variables only — never hardcoded
+ */
+
 'use strict';
 
 const express = require('express');
