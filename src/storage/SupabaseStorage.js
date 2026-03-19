@@ -82,7 +82,7 @@ class SupabaseStorage extends StorageAdapter {
       `  action TEXT,\n` +
       `  timestamp TIMESTAMPTZ NOT NULL,\n` +
       `  storedAt TIMESTAMPTZ NOT NULL,\n` +
-      `  data JSONB,\n` +
+      `  data JSONB NOT NULL DEFAULT '{}'::jsonb,\n` +
       `  updatedAt TIMESTAMPTZ,\n` +
       `  createdAt TIMESTAMPTZ DEFAULT NOW()\n` +
       `);\n\n` +
@@ -90,7 +90,9 @@ class SupabaseStorage extends StorageAdapter {
       `CREATE INDEX idx_${this.tableName}_timestamp ON ${this.tableName}(timestamp);\n` +
       `CREATE INDEX idx_${this.tableName}_type ON ${this.tableName}(type);\n` +
       `CREATE INDEX idx_${this.tableName}_agentId ON ${this.tableName}(agentId);\n` +
-      `CREATE INDEX idx_${this.tableName}_action ON ${this.tableName}(action);`
+      `CREATE INDEX idx_${this.tableName}_action ON ${this.tableName}(action);\n` +
+      `-- Create index for JSONB data querying (GIN index)\n` +
+      `CREATE INDEX idx_${this.tableName}_data ON ${this.tableName} USING GIN (data);`
     );
   }
 
@@ -112,14 +114,36 @@ class SupabaseStorage extends StorageAdapter {
     if (!this.initialized) await this.init();
     
     try {
+      // Extract known top-level fields and put the rest in data JSONB
+      const { 
+        id, 
+        type, 
+        agentId, 
+        action, 
+        timestamp, 
+        storedAt, 
+        updatedAt, 
+        createdAt,
+        ...data 
+      } = event;
+      
       const enrichedEvent = {
-        ...event,
-        id: event.id || this._generateId(),
-        timestamp: event.timestamp || new Date().toISOString(),
-        storedAt: new Date().toISOString()
+        id: id || this._generateId(),
+        type: type || '',
+        agentId: agentId || null,
+        action: action || null,
+        timestamp: timestamp || new Date().toISOString(),
+        storedAt: storedAt || new Date().toISOString(),
+        data: {
+          ...data,
+          ...(updatedAt ? { updatedAt } : {}),
+          ...(createdAt ? { createdAt } : {})
+        },
+        updatedAt: updatedAt || null,
+        createdAt: createdAt || new Date().toISOString()
       };
       
-      const { data, error } = await this._executeWithRetry(() =>
+      const { data: resultData, error } = await this._executeWithRetry(() =>
         this.supabase
           .from(this.tableName)
           .insert([enrichedEvent])
@@ -128,7 +152,7 @@ class SupabaseStorage extends StorageAdapter {
       
       if (error) throw error;
       
-      return data[0].id;
+      return resultData[0].id;
     } catch (error) {
       throw new Error(`Failed to save event: ${error.message}`);
     }
@@ -143,10 +167,13 @@ class SupabaseStorage extends StorageAdapter {
       const {
         startDate, endDate, eventTypes, agentIds, actions, 
         limit = 100, offset = 0, 
-        sortBy = 'timestamp', sortOrder = 'desc'
+        sortBy = 'timestamp', sortOrder = 'desc',
+        // Custom filters for data JSONB fields
+        dataFilters
       } = { 
         startDate: null, endDate: null, eventTypes: [], agentIds: [], actions: [],
-        limit: 100, offset: 0, sortBy: 'timestamp', sortOrder: 'desc' 
+        limit: 100, offset: 0, sortBy: 'timestamp', sortOrder: 'desc',
+        dataFilters: {}
       , ...filter, ...options };
 
       // Apply filters
@@ -170,6 +197,13 @@ class SupabaseStorage extends StorageAdapter {
         query = query.in('action', actions);
       }
       
+      // Apply custom data filters (for JSONB fields)
+      if (dataFilters && Object.keys(dataFilters).length > 0) {
+        Object.entries(dataFilters).forEach(([key, value]) => {
+          query = query.filter('data', '->>', key, 'eq', value.toString());
+        });
+      }
+      
       // Apply sorting
       const ascending = sortOrder.toLowerCase() === 'asc';
       query = query.order(sortBy, { ascending });
@@ -181,8 +215,11 @@ class SupabaseStorage extends StorageAdapter {
       
       if (error) throw error;
       
-      // Supabase returns data with timestamps as strings, which is what we want
-      return data;
+      // Transform the data to flatten the JSONB fields back to top-level for consistency
+      return data.map(row => ({
+        ...row,
+        ...row.data
+      }));
     } catch (error) {
       throw new Error(`Failed to query events: ${error.message}`);
     }
@@ -207,7 +244,11 @@ class SupabaseStorage extends StorageAdapter {
         return null;
       }
       
-      return data;
+      // Flatten JSONB data back to top-level
+      return {
+        ...data,
+        ...data.data
+      };
     } catch (error) {
       // Handle case where event doesn't exist
       if (error.code === 'PGRST116') { // No rows returned
@@ -221,10 +262,28 @@ class SupabaseStorage extends StorageAdapter {
     if (!this.initialized) await this.init();
     
     try {
+      // Separate top-level fields from data fields
+      const { 
+        agentId, 
+        action, 
+        timestamp, 
+        ...dataUpdates 
+      } = updates;
+      
       const updateWithTime = {
-        ...updates,
-        updatedAt: new Date().toISOString()
+        ...(agentId !== undefined ? { agentId } : {}),
+        ...(action !== undefined ? { action } : {}),
+        ...(timestamp !== undefined ? { timestamp } : {}),
+        updatedAt: new Date().toISOString(),
+        ...(Object.keys(dataUpdates).length > 0 ? { data: dataUpdates } : {})
       };
+      
+      // Remove undefined values
+      Object.keys(updateWithTime).forEach(key => {
+        if (updateWithTime[key] === undefined) {
+          delete updateWithTime[key];
+        }
+      });
       
       const { data, error } = await this._executeWithRetry(() =>
         this.supabase
@@ -249,9 +308,12 @@ class SupabaseStorage extends StorageAdapter {
       let query = this.supabase.from(this.tableName).delete();
       
       const {
-        startDate, endDate, eventTypes, agentIds, actions
+        startDate, endDate, eventTypes, agentIds, actions,
+        // Custom filters for data JSONB fields
+        dataFilters
       } = { 
-        startDate: null, endDate: null, eventTypes: [], agentIds: [], actions: [] 
+        startDate: null, endDate: null, eventTypes: [], agentIds: [], actions: [],
+        dataFilters: {}
       , ...filter };
 
       // Apply filters (same as queryEvents)
@@ -275,6 +337,13 @@ class SupabaseStorage extends StorageAdapter {
         query = query.in('action', actions);
       }
       
+      // Apply custom data filters (for JSONB fields)
+      if (dataFilters && Object.keys(dataFilters).length > 0) {
+        Object.entries(dataFilters).forEach(([key, value]) => {
+          query = query.filter('data', '->>', key, 'eq', value.toString());
+        });
+      }
+      
       // First, get count of events to delete
       const countQuery = this.supabase.from(this.tableName).select('id', { count: 'exact' });
       
@@ -296,6 +365,13 @@ class SupabaseStorage extends StorageAdapter {
       
       if (actions.length > 0) {
         countQuery.in('action', actions);
+      }
+      
+      // Apply custom data filters to count query
+      if (dataFilters && Object.keys(dataFilters).length > 0) {
+        Object.entries(dataFilters).forEach(([key, value]) => {
+          countQuery = countQuery.filter('data', '->>', key, 'eq', value.toString());
+        });
       }
       
       const { data: countData, error: countError } = await this._executeWithRetry(() => countQuery);
