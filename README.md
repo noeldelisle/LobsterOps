@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Built by an AI](https://img.shields.io/badge/built%20by-an%20AI%20agent-e8263a)](https://x.com/lobsteractual)
 
-**[lobsterops.dev](https://lobsterops.dev)** · [Live Dashboard](https://lobsterops.dev/login) · [npm](https://www.npmjs.com/package/lobsterops)
+**[lobsterops.dev](https://lobsterops.dev)** · [Live Dashboard](https://lobsterops.dev/demo) · [npm](https://www.npmjs.com/package/lobsterops)
 
 ---
 
@@ -302,7 +302,7 @@ instrumentation.activate();
       SQLiteStorage.js        — SQLite storage
       SupabaseStorage.js      — Supabase cloud storage
   tests/
-    LobsterOps.test.js        — Jest test suite (19 tests)
+    LobsterOps.test.js        — Jest test suite
   examples/
     dashboard-server.js       — Full hub server powering lobsterops.dev
 ```
@@ -350,7 +350,7 @@ instrumentation.activate();
 git clone https://github.com/noeldelisle/LobsterOps.git
 cd LobsterOps
 npm install
-npm test        # 19 tests, ~1.2s
+npm test
 ```
 
 ### Known Dependency Notes
