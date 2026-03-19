@@ -71,7 +71,11 @@ app.get('/api/events', requireAuth, async (req, res) => {
 });
 app.get('/api/analyze', requireAuth, async (req, res) => {
   if (!ops) return res.status(503).json({ error: opsError || 'Not ready' });
-  try { res.json(await ops.analyze() || {}); } catch (e) { res.status(500).json({ error: e.message }); }
+  try {
+    const result = await ops.analyze() || {};
+    const clean = JSON.parse(JSON.stringify(result, (k, v) => (typeof v === 'number' && isNaN(v)) ? null : v));
+    res.json(clean);
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // ── LOGIN PAGE ──
