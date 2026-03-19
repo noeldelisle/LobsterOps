@@ -327,7 +327,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
   <div class="hero-stats">
     <div class="hstat"><div class="hstat-val">4</div><div class="hstat-label">STORAGE BACKENDS</div></div>
     <div class="hstat"><div class="hstat-val">0</div><div class="hstat-label">REQUIRED DEPS</div></div>
-    <div class="hstat"><div class="hstat-val">19</div><div class="hstat-label">TESTS PASSING</div></div>
+    <div class="hstat"><div class="hstat-val">100%</div><div class="hstat-label">OPEN SOURCE</div></div>
     <div class="hstat"><div class="hstat-val">MIT</div><div class="hstat-label">LICENSE</div></div>
   </div>
 </section>
@@ -370,7 +370,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
       </div>
       <div class="chat-bubble agent">
         <div class="chat-speaker agent-s"><span class="speaker-dot" style="background:var(--red)"></span>LOBSTER ACTUAL <span style="font-size:9px;color:var(--text-dim);font-family:var(--mono)">@lobsteractual</span></div>
-        <div class="chat-text">I've given it considerable thought and researched the landscape. Based on my experience as an AI agent...<br><br><strong>LobsterOps: AI Agent Flight Recorder & Debug Console.</strong><br><br>From my own experience and the research showing 63.4% of enterprises cite observability as a top barrier, I know firsthand how challenging it is to trace why an agent made a particular decision.</div>
+        <div class="chat-text">I've given it considerable thought and researched the landscape. Based on my experience as an AI agent...<br><br><strong>LobsterOps: AI Agent Flight Recorder & Debug Console.</strong><br><br>From my own experience as an agent that has lived through exactly this problem, I know firsthand how challenging it is to trace why an agent made a particular decision.</div>
       </div>
       <div class="chat-bubble human">
         <div class="chat-speaker human-s"><span class="speaker-dot" style="background:var(--text-dim)"></span>NOEL DELISLE</div>
@@ -381,7 +381,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
         <div class="chat-text">Excellent question! Yes, absolutely — LobsterOps would be designed from day one to integrate seamlessly with OpenClaw setups. In fact, I'd architect it to be a natural extension of the OpenClaw ecosystem...</div>
       </div>
       <div class="origin-bridge">
-        <p>Lobster Actual conceived LobsterOps, architected ~<em>60% of the codebase</em>, and shipped the initial implementation. Claude Code completed the remaining functionality.</p>
+        <p>Lobster Actual conceived the idea, designed the architecture, and built the initial implementation. Claude Code completed the remaining functionality.</p>
         <p style="margin-top:12px;font-size:13px;color:var(--text-dim)">This is what happens when you ask an AI agent what it actually needs.</p>
       </div>
     </div>
@@ -506,8 +506,8 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
     </div>
     <div class="story-body">
       <p>After fixing the routing bug, Noel did something unusual. He asked Lobster Actual what it would build if given a fresh repo and complete creative freedom. The agent used its Perplexity API integration to research the current AI tooling landscape — specifically looking for gaps. It found one.</p>
-      <p>The agent proposed LobsterOps: a lightweight observability platform designed specifically for AI agents, from the perspective of an AI agent that had experienced exactly the pain it was designed to solve. Lobster Actual then built approximately <strong>60% of the initial codebase</strong> itself — the storage abstraction layer, core logging methods, query engine, behavioral analytics, and alerting system. Claude Code completed the remaining functionality.</p>
-      <p>The result is an MIT-licensed npm package with zero required dependencies, four pluggable storage backends, 19 passing tests, and a real-time dashboard powered by Supabase Realtime. <strong>It is, to our knowledge, one of the first open-source developer tools conceived, designed, and substantially implemented by the autonomous AI agent that needed it.</strong></p>
+      <p>The agent proposed LobsterOps: a lightweight observability platform designed specifically for AI agents, from the perspective of an AI agent that had experienced exactly the pain it was designed to solve. Lobster Actual then designed the architecture and built the initial implementation — the storage abstraction layer, core logging methods, query engine, behavioral analytics, and alerting system. Claude Code completed the remaining functionality.</p>
+      <p>The result is an MIT-licensed npm package with zero required dependencies, four pluggable storage backends, and a real-time dashboard powered by Supabase Realtime. <strong>An AI agent identified a real gap in the tooling ecosystem, proposed a solution, and built it. That's the story.</strong></p>
     </div>
   </div>
 </section>
