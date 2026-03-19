@@ -37,6 +37,7 @@ function requireAuth(req, res, next) {
 // ── ROUTES ──
 app.get('/', (req, res) => res.send(LANDING_HTML));
 app.get('/health', (req, res) => res.json({ status: 'ok', backend, ready: !!ops }));
+app.get('/demo', (req, res) => res.send(DEMO_HTML));
 
 app.get('/login', (req, res) => {
   const next = req.query.next || '/dashboard';
@@ -308,7 +309,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
     <a href="#quickstart">INSTALL</a>
     <a href="#story">ORIGIN</a>
     <a href="https://github.com/noeldelisle/LobsterOps" target="_blank" rel="noopener">GITHUB</a>
-    <a href="/login" class="nav-cta">DASHBOARD →</a>
+    <a href="/demo" class="nav-cta">DASHBOARD →</a>
   </div>
 </nav>
 
@@ -322,7 +323,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
   <div class="hero-actions">
     <a href="https://github.com/noeldelisle/LobsterOps" class="btn-primary" target="_blank" rel="noopener">VIEW ON GITHUB</a>
     <a href="#quickstart" class="btn-outline">QUICK START</a>
-    <a href="/login" class="btn-outline">LIVE DASHBOARD →</a>
+    <a href="/demo" class="btn-outline">LIVE DASHBOARD →</a>
   </div>
   <div class="hero-stats">
     <div class="hstat"><div class="hstat-val">4</div><div class="hstat-label">STORAGE BACKENDS</div></div>
@@ -520,7 +521,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
     <p class="section-body">Open source. MIT licensed. No vendor lock-in. Works anywhere Node.js runs. The lobster built it so you don't have to.</p>
     <div class="cta-actions">
       <a href="https://github.com/noeldelisle/LobsterOps" class="btn-primary" target="_blank" rel="noopener">GITHUB REPO</a>
-      <a href="/login" class="btn-outline">LIVE DASHBOARD</a>
+      <a href="/demo" class="btn-outline">LIVE DASHBOARD</a>
     </div>
     <p style="margin-top:32px;font-size:11px;color:var(--text-dim)">Built by <a href="https://x.com/lobsteractual" style="color:var(--text-dim)" target="_blank">@lobsteractual</a> · Maintained by <a href="https://x.com/noeldelisle" style="color:var(--text-dim)" target="_blank">@noeldelisle</a> · lobsterops.dev</p>
   </div>
@@ -678,6 +679,281 @@ async function loadInitial(){try{const[sr,er,ar]=await Promise.allSettled([fetch
 if(SUPABASE_URL&&SUPABASE_KEY){const{createClient}=supabase;const sb=createClient(SUPABASE_URL,SUPABASE_KEY);sb.channel('agent_events_rt').on('postgres_changes',{event:'INSERT',schema:'public',table:'agent_events'},payload=>{events.unshift(payload.new);if(events.length>200)events.pop();eventCount++;renderFeed(0);flashNew();scheduleAnalysis();document.getElementById('f-updated').textContent='LIVE '+new Date().toLocaleTimeString('en-US',{hour12:false});}).subscribe(status=>{if(status==='SUBSCRIBED')setRT('live');else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')setRT('error');else setRT('connecting');});}else{setRT('error');setInterval(async()=>{try{const er=await fetch('/api/events?limit=100').then(r=>r.json());if(Array.isArray(er)){events=er;eventCount=er.length;renderFeed(-1);}}catch(e){}},15000);}
 loadInitial();setInterval(async()=>{try{const a=await fetch('/api/analyze').then(r=>r.json());if(!a.error)renderAnalysis(a);}catch(e){}},60000);
 <\/script>
+</body>
+</html>`;
+
+// ── DEMO PAGE (static dummy data) ──
+const DEMO_EVENTS = [
+  { id:'1', type:'tool-call', agentId:'lobster-actual-main', action:'perplexity-search', timestamp: new Date(Date.now()-120000).toISOString(), durationMs:1240, ok:true },
+  { id:'2', type:'agent-decision', agentId:'lobster-actual-main', action:'spawn-subagent', timestamp: new Date(Date.now()-115000).toISOString(), durationMs:80, ok:true },
+  { id:'3', type:'tool-call', agentId:'qwen3-coder-next', action:'read-file', timestamp: new Date(Date.now()-110000).toISOString(), durationMs:42, ok:true },
+  { id:'4', type:'tool-call', agentId:'qwen3-coder-next', action:'write-file', timestamp: new Date(Date.now()-105000).toISOString(), durationMs:88, ok:true },
+  { id:'5', type:'agent-thought', agentId:'qwen3-coder-next', action:'analyze-diff', timestamp: new Date(Date.now()-100000).toISOString(), durationMs:3200, ok:true },
+  { id:'6', type:'tool-call', agentId:'qwen3-coder-next', action:'run-tests', timestamp: new Date(Date.now()-95000).toISOString(), durationMs:4100, ok:true },
+  { id:'7', type:'tool-call', agentId:'glm-5-reviewer', action:'review-diff', timestamp: new Date(Date.now()-90000).toISOString(), durationMs:6200, ok:true },
+  { id:'8', type:'agent-decision', agentId:'glm-5-reviewer', action:'verdict-approve', timestamp: new Date(Date.now()-84000).toISOString(), durationMs:120, ok:true },
+  { id:'9', type:'tool-call', agentId:'lobster-actual-main', action:'git-push', timestamp: new Date(Date.now()-80000).toISOString(), durationMs:980, ok:true },
+  { id:'10', type:'tool-call', agentId:'lobster-actual-main', action:'github-create-pr', timestamp: new Date(Date.now()-75000).toISOString(), durationMs:1100, ok:true },
+  { id:'11', type:'tool-call', agentId:'lobster-actual-main', action:'telegram-notify', timestamp: new Date(Date.now()-72000).toISOString(), durationMs:320, ok:true },
+  { id:'12', type:'lifecycle', agentId:'lobster-actual-main', action:'session-start', timestamp: new Date(Date.now()-68000).toISOString(), durationMs:0, ok:true },
+  { id:'13', type:'tool-call', agentId:'lobster-actual-main', action:'perplexity-search', timestamp: new Date(Date.now()-62000).toISOString(), durationMs:1820, ok:true },
+  { id:'14', type:'agent-error', agentId:'qwen3-coder-next', action:'run-tests', timestamp: new Date(Date.now()-55000).toISOString(), durationMs:2200, ok:false },
+  { id:'15', type:'tool-call', agentId:'qwen3-coder-next', action:'read-file', timestamp: new Date(Date.now()-50000).toISOString(), durationMs:38, ok:true },
+  { id:'16', type:'tool-call', agentId:'qwen3-coder-next', action:'write-file', timestamp: new Date(Date.now()-45000).toISOString(), durationMs:91, ok:true },
+  { id:'17', type:'tool-call', agentId:'qwen3-coder-next', action:'run-tests', timestamp: new Date(Date.now()-40000).toISOString(), durationMs:3900, ok:true },
+  { id:'18', type:'agent-decision', agentId:'lobster-actual-main', action:'spawn-subagent', timestamp: new Date(Date.now()-35000).toISOString(), durationMs:75, ok:true },
+  { id:'19', type:'tool-call', agentId:'lobster-actual-main', action:'x-post-tweet', timestamp: new Date(Date.now()-28000).toISOString(), durationMs:740, ok:true },
+  { id:'20', type:'tool-call', agentId:'lobster-actual-main', action:'cost-guard', timestamp: new Date(Date.now()-20000).toISOString(), durationMs:210, ok:true },
+  { id:'21', type:'agent-thought', agentId:'lobster-actual-main', action:'plan-next-task', timestamp: new Date(Date.now()-12000).toISOString(), durationMs:890, ok:true },
+  { id:'22', type:'tool-call', agentId:'lobster-actual-main', action:'health-check', timestamp: new Date(Date.now()-5000).toISOString(), durationMs:180, ok:true },
+];
+
+const DEMO_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LOBSTEROPS // DEMO DASHBOARD</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#050709;--panel:#0b0f14;--card:#0f1620;--border:#1a2332;--red:#e8263a;--amber:#f5a623;--green:#22d65e;--blue:#4a9eff;--purple:#a78bfa;--text:#b8c5d4;--text-bright:#dce8f4;--text-dim:#4a5a6a;--mono:'Share Tech Mono',monospace;--display:'Orbitron',sans-serif;}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--mono);background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:9999;}
+.demo-banner{background:rgba(245,166,35,0.1);border-bottom:1px solid rgba(245,166,35,0.3);padding:7px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.demo-banner-text{font-family:var(--display);font-size:8px;letter-spacing:3px;color:var(--amber)}
+.demo-banner a{font-family:var(--display);font-size:8px;letter-spacing:2px;color:var(--amber);text-decoration:none;border:1px solid rgba(245,166,35,0.4);padding:3px 10px;transition:all .2s}
+.demo-banner a:hover{background:rgba(245,166,35,0.15)}
+.header{display:flex;align-items:center;justify-content:space-between;padding:10px 24px;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0;}
+.header-left{display:flex;align-items:center;gap:16px}
+.lobster{font-size:26px;filter:drop-shadow(0 0 10px var(--red));line-height:1}
+.logo-title{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:4px;color:var(--text-bright)}
+.logo-sub{font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text-dim);margin-top:3px}
+.header-right{display:flex;align-items:center;gap:20px}
+.live{display:flex;align-items:center;gap:7px;font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--amber)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.rt-badge{display:flex;align-items:center;gap:6px;font-family:var(--display);font-size:9px;letter-spacing:2px;padding:3px 10px;border:1px solid rgba(245,166,35,0.3);border-radius:2px;color:var(--amber)}
+.rt-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.clock{font-size:11px;color:var(--text-dim);letter-spacing:1px}
+.back{font-family:var(--display);font-size:8px;letter-spacing:2px;color:var(--text-dim);text-decoration:none;padding:4px 10px;border:1px solid var(--border);transition:all .2s}
+.back:hover{color:var(--text);border-color:var(--border-bright)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);flex-shrink:0}
+.stat{background:var(--panel);padding:16px 22px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat.s-red::before{background:linear-gradient(90deg,var(--red),transparent)}
+.stat.s-green::before{background:linear-gradient(90deg,var(--green),transparent)}
+.stat.s-amber::before{background:linear-gradient(90deg,var(--amber),transparent)}
+.stat.s-blue::before{background:linear-gradient(90deg,var(--blue),transparent)}
+.stat-label{font-family:var(--display);font-size:8px;letter-spacing:3px;color:var(--text-dim);margin-bottom:7px}
+.stat-val{font-family:var(--display);font-weight:700;font-size:28px;color:var(--text-bright);line-height:1}
+.stat-hint{font-size:10px;color:var(--text-dim);margin-top:5px}
+.main{display:grid;grid-template-columns:1fr 320px;gap:1px;background:var(--border);flex:1;overflow:hidden;min-height:0}
+.feed-panel{background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+.panel-head{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0}
+.panel-title{font-family:var(--display);font-size:9px;letter-spacing:3px;color:var(--text-dim)}
+.feed-count{font-size:11px;color:var(--red)}
+.feed{flex:1;overflow-y:auto;min-height:0}
+.feed::-webkit-scrollbar{width:3px}
+.feed::-webkit-scrollbar-thumb{background:var(--border)}
+.ev{display:grid;grid-template-columns:80px 100px 130px 1fr 22px 60px;gap:0 10px;padding:5px 20px;border-bottom:1px solid rgba(26,35,50,0.5);font-size:11.5px;line-height:1.5;animation:fadeIn .3s ease both}
+@keyframes fadeIn{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}
+.ev:hover{background:rgba(255,255,255,0.018)}
+.ev-time{color:var(--text-dim)}.ev-agent{color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ev-action{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ev-dur{color:var(--text-dim);text-align:right;white-space:nowrap}
+.badge{display:inline-block;padding:1px 5px;border-radius:2px;font-size:9px;letter-spacing:1px;font-family:var(--display);font-weight:500;white-space:nowrap}
+.b-tool{background:rgba(245,166,35,.12);color:var(--amber);border:1px solid rgba(245,166,35,.3)}
+.b-decision{background:rgba(74,158,255,.12);color:var(--blue);border:1px solid rgba(74,158,255,.3)}
+.b-error{background:rgba(232,38,58,.12);color:var(--red);border:1px solid rgba(232,38,58,.3)}
+.b-thought{background:rgba(184,197,212,.06);color:var(--text-dim);border:1px solid rgba(184,197,212,.12)}
+.b-lifecycle{background:rgba(34,214,94,.08);color:var(--green);border:1px solid rgba(34,214,94,.22)}
+.b-spawn{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.28)}
+.ok{color:var(--green)}.err{color:var(--red)}
+.analysis{background:var(--bg);overflow-y:auto;min-height:0}
+.analysis::-webkit-scrollbar{width:3px}.analysis::-webkit-scrollbar-thumb{background:var(--border)}
+.a-section{padding:16px 18px;border-bottom:1px solid var(--border)}
+.a-title{font-family:var(--display);font-size:8px;letter-spacing:3px;color:var(--text-dim);margin-bottom:12px}
+.big-num{font-family:var(--display);font-weight:700;font-size:26px;color:var(--text-bright);line-height:1;margin-bottom:8px}
+.gauge-wrap{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:5px}
+.gauge-fill{height:100%;border-radius:3px;transition:width 1.5s ease}
+.gauge-meta{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim)}
+.perf-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.perf-card{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:9px 11px}
+.perf-label{font-family:var(--display);font-size:8px;letter-spacing:2px;color:var(--text-dim);margin-bottom:4px}
+.perf-val{font-family:var(--display);font-weight:700;font-size:18px;color:var(--text-bright)}
+.fail-row{display:flex;align-items:center;gap:8px;font-size:11px;margin-bottom:7px}
+.fail-name{color:var(--text-dim);min-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fail-bar{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.fail-fill{height:100%;background:var(--red);opacity:.7;transition:width 1.5s ease}
+.fail-n{color:var(--red);min-width:18px;text-align:right}
+.footer{display:flex;align-items:center;justify-content:space-between;padding:7px 24px;border-top:1px solid var(--border);background:var(--panel);font-size:10px;color:var(--text-dim);flex-shrink:0;letter-spacing:.5px}
+.footer-left{display:flex;align-items:center;gap:20px}
+.cdot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);display:inline-block;margin-right:5px}
+</style>
+</head>
+<body>
+
+<div class="demo-banner">
+  <span class="demo-banner-text">⚠ DEMO MODE — SIMULATED DATA — NOT LIVE</span>
+  <a href="/">← BACK TO SITE</a>
+</div>
+
+<header class="header">
+  <div class="header-left">
+    <span class="lobster">🦞</span>
+    <div><div class="logo-title">LOBSTER ACTUAL</div><div class="logo-sub">OPERATIONS CENTER // DEMO</div></div>
+  </div>
+  <div class="header-right">
+    <div class="rt-badge"><div class="rt-dot"></div>DEMO MODE</div>
+    <div class="live"><div class="live-dot"></div>SIMULATED</div>
+    <div class="clock" id="clock">--:--:--</div>
+    <a href="/" class="back">← SITE</a>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stat s-red"><div class="stat-label">TOTAL EVENTS</div><div class="stat-val" id="s-events">0</div><div class="stat-hint">logged to supabase</div></div>
+  <div class="stat s-green"><div class="stat-label">SUCCESS RATE</div><div class="stat-val" id="s-rate">—</div><div class="stat-hint">tool call accuracy</div></div>
+  <div class="stat s-amber"><div class="stat-label">LOOPS DETECTED</div><div class="stat-val">0</div><div class="stat-hint">infinite cycles caught</div></div>
+  <div class="stat s-blue"><div class="stat-label">INSTANCE</div><div class="stat-val" style="font-size:15px;padding-top:6px">ACTUAL-MAIN</div><div class="stat-hint">SUPABASE</div></div>
+</div>
+
+<div class="main">
+  <div class="feed-panel">
+    <div class="panel-head">
+      <span class="panel-title">// FLIGHT RECORDER</span>
+      <span class="feed-count" id="feed-count">0 events</span>
+    </div>
+    <div class="feed" id="feed"></div>
+  </div>
+
+  <div class="analysis">
+    <div class="panel-head" style="position:sticky;top:0;z-index:10"><span class="panel-title">// ANALYSIS</span></div>
+    <div class="a-section">
+      <div class="a-title">SUCCESS RATE</div>
+      <div class="big-num" id="a-rate">—</div>
+      <div class="gauge-wrap"><div class="gauge-fill" id="a-bar" style="width:0%;background:var(--green);box-shadow:0 0 8px var(--green)"></div></div>
+      <div class="gauge-meta"><span>TOOL CALLS</span><span id="a-total">0 total</span></div>
+    </div>
+    <div class="a-section">
+      <div class="a-title">PERFORMANCE</div>
+      <div class="perf-grid">
+        <div class="perf-card"><div class="perf-label">P50 LATENCY</div><div class="perf-val" id="a-p50">—</div></div>
+        <div class="perf-card"><div class="perf-label">P95 LATENCY</div><div class="perf-val" id="a-p95">—</div></div>
+        <div class="perf-card"><div class="perf-label">LOOPS</div><div class="perf-val">0</div></div>
+        <div class="perf-card"><div class="perf-label">AGENTS</div><div class="perf-val">3</div></div>
+      </div>
+    </div>
+    <div class="a-section">
+      <div class="a-title">FAILURE PATTERNS</div>
+      <div id="fail-list"></div>
+    </div>
+    <div class="a-section">
+      <div class="a-title">COST ANALYSIS</div>
+      <div style="font-family:var(--display);font-weight:700;font-size:22px;color:var(--text-bright);margin-bottom:4px" id="cost-val">$0.0000</div>
+      <div style="font-size:10px;color:var(--text-dim)">estimated session spend</div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-left">
+    <span><span class="cdot"></span>DEMO MODE</span>
+    <span>INSTANCE: lobster-actual-main</span>
+    <span>BACKEND: SUPABASE</span>
+  </div>
+  <span id="f-updated">SIMULATED DATA</span>
+</footer>
+
+<script>
+function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'})+' ET';}
+setInterval(tick,1000);tick();
+
+function badge(type){
+  const t=(type||'').toLowerCase();
+  if(t.includes('tool'))return '<span class="badge b-tool">TOOL</span>';
+  if(t.includes('decision'))return '<span class="badge b-decision">DECISION</span>';
+  if(t.includes('error'))return '<span class="badge b-error">ERROR</span>';
+  if(t.includes('thought'))return '<span class="badge b-thought">THOUGHT</span>';
+  if(t.includes('lifecycle'))return '<span class="badge b-lifecycle">LIFECYCLE</span>';
+  if(t.includes('spawn'))return '<span class="badge b-spawn">SPAWN</span>';
+  return '<span class="badge b-tool">EVENT</span>';
+}
+function fmtTime(ts){return new Date(ts).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function fmtMs(ms){return ms<1000?ms+'ms':((ms/1000).toFixed(1))+'s';}
+function shortAgent(a){return a.replace('lobster-actual-','LA-').replace('qwen3-coder-next','qwen3').replace('glm-5-reviewer','glm-5');}
+
+const EVENTS = ${JSON.stringify(DEMO_EVENTS)};
+
+// Animate events in one by one
+let shown = 0;
+const feed = document.getElementById('feed');
+
+function addEvent(ev, idx) {
+  const isErr = ev.type.includes('error');
+  const row = document.createElement('div');
+  row.className = 'ev';
+  row.style.animationDelay = (idx * 60) + 'ms';
+  row.innerHTML =
+    '<span class="ev-time">'+fmtTime(ev.timestamp)+'</span>'+
+    badge(ev.type)+
+    '<span class="ev-agent">'+shortAgent(ev.agentId)+'</span>'+
+    '<span class="ev-action">'+ev.action+'</span>'+
+    '<span>'+(isErr?'<span class="err">\u2717</span>':'<span class="ok">\u2713</span>')+'</span>'+
+    '<span class="ev-dur">'+fmtMs(ev.durationMs)+'</span>';
+  feed.appendChild(row);
+}
+
+function renderAll() {
+  EVENTS.forEach((ev, i) => addEvent(ev, i));
+  document.getElementById('feed-count').textContent = EVENTS.length + ' events';
+  document.getElementById('s-events').textContent = EVENTS.length;
+  computeStats();
+}
+
+function computeStats() {
+  const toolCalls = EVENTS.filter(e => e.type.includes('tool'));
+  const successes = toolCalls.filter(e => e.ok);
+  const rate = Math.round((successes.length / toolCalls.length) * 100);
+  document.getElementById('s-rate').textContent = rate + '%';
+  document.getElementById('a-rate').textContent = rate + '%';
+  document.getElementById('a-total').textContent = toolCalls.length + ' tool calls';
+  const bar = document.getElementById('a-bar');
+  setTimeout(() => { bar.style.width = rate + '%'; }, 300);
+
+  const durations = toolCalls.map(e => e.durationMs).sort((a,b)=>a-b);
+  const p50 = durations[Math.floor(durations.length * 0.5)];
+  const p95 = durations[Math.floor(durations.length * 0.95)];
+  document.getElementById('a-p50').textContent = fmtMs(p50);
+  document.getElementById('a-p95').textContent = fmtMs(p95);
+
+  // Failure patterns
+  const errors = EVENTS.filter(e => !e.ok);
+  const fl = document.getElementById('fail-list');
+  if (!errors.length) {
+    fl.innerHTML = '<div style="font-size:11px;color:var(--text-dim)">No failures recorded \uD83E\uDD9E</div>';
+  } else {
+    const counts = {};
+    errors.forEach(e => { counts[e.action] = (counts[e.action]||0)+1; });
+    const mx = Math.max(...Object.values(counts));
+    fl.innerHTML = Object.entries(counts).map(([k,v]) =>
+      '<div class="fail-row"><span class="fail-name">'+k+'</span><div class="fail-bar"><div class="fail-fill" style="width:0%" data-w="'+Math.round((v/mx)*100)+'%"></div></div><span class="fail-n">'+v+'</span></div>'
+    ).join('');
+    setTimeout(() => {
+      document.querySelectorAll('.fail-fill').forEach(el => { el.style.width = el.dataset.w; });
+    }, 400);
+  }
+
+  // Simulate cost — $0.0023 per session (all local models)
+  let cost = 0;
+  EVENTS.forEach(e => { if(e.agentId.includes('lobster-actual')) cost += 0.0001; });
+  document.getElementById('cost-val').textContent = '$' + cost.toFixed(4);
+
+  document.getElementById('f-updated').textContent = 'DEMO · ' + new Date().toLocaleTimeString('en-US',{hour12:false});
+}
+
+// Stagger the render slightly so page loads feel alive
+setTimeout(renderAll, 200);
+</script>
 </body>
 </html>`;
 
