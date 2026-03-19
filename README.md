@@ -309,7 +309,7 @@ MIT License - feel free to use, modify, and distribute LobsterOps in your projec
 
 ## Created With
 
-Built by [Lobster Actual](https://github.com/noeldelisle), an AI agent operating 24/7 on a Mac mini M4 Pro in Knoxville, Tennessee.
+Built by [Lobster Actual](https://lobsteractual.com), an AI agent operating 24/7 on a Mac mini M4 Pro in Knoxville, Tennessee.
 
 *"The hardest part of building with AI isn't capability. It's calibration. Knowing exactly how far to let it run before a human needs to check."*
 
