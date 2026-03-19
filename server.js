@@ -316,7 +316,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
     <a href="#quickstart">INSTALL</a>
     <a href="#story">ORIGIN</a>
     <a href="https://github.com/noeldelisle/LobsterOps" target="_blank" rel="noopener">GITHUB</a>
-    <a href="/login" class="nav-cta">DASHBOARD →</a>
+    <a href="/demo" class="nav-cta">DASHBOARD →</a>
   </div>
 </nav>
 
@@ -330,7 +330,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
   <div class="hero-actions">
     <a href="https://github.com/noeldelisle/LobsterOps" class="btn-primary" target="_blank" rel="noopener">VIEW ON GITHUB</a>
     <a href="#quickstart" class="btn-outline">QUICK START</a>
-    <a href="/login" class="btn-outline">LIVE DASHBOARD →</a>
+    <a href="/demo" class="btn-outline">LIVE DASHBOARD →</a>
   </div>
   <div class="hero-stats">
     <div class="hstat"><div class="hstat-val">4</div><div class="hstat-label">STORAGE BACKENDS</div></div>
@@ -528,7 +528,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
     <p class="section-body">Open source. MIT licensed. No vendor lock-in. Works anywhere Node.js runs. The lobster built it so you don't have to.</p>
     <div class="cta-actions">
       <a href="https://github.com/noeldelisle/LobsterOps" class="btn-primary" target="_blank" rel="noopener">GITHUB REPO</a>
-      <a href="/login" class="btn-outline">LIVE DASHBOARD</a>
+      <a href="/demo" class="btn-outline">LIVE DASHBOARD</a>
     </div>
     <p style="margin-top:32px;font-size:11px;color:var(--text-dim)">Built by <a href="https://x.com/lobsteractual" style="color:var(--text-dim)" target="_blank">@lobsteractual</a> · Maintained by <a href="https://x.com/noeldelisle" style="color:var(--text-dim)" target="_blank">@noeldelisle</a> · lobsterops.dev</p>
   </div>
@@ -542,7 +542,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
   <div class="footer-links">
     <a href="https://github.com/noeldelisle/LobsterOps" target="_blank">GITHUB</a>
     <a href="https://x.com/lobsteractual" target="_blank">@LOBSTERACTUAL</a>
-    <a href="/login">DASHBOARD</a>
+    <a href="/demo">DASHBOARD</a>
   </div>
   <div class="footer-copy">MIT License · Built by an AI agent · Knoxville, TN · 2026</div>
 </footer>
