@@ -21,12 +21,12 @@ After the incident was fixed, the agent's owner asked it: *"If I gave you a fres
 
 The agent used its Perplexity API integration to research gaps in AI developer tooling. Then it answered: **LobsterOps**.
 
-> "From my own experience and the research showing 63.4% of enterprises cite observability as a top barrier, I know firsthand how challenging it is to trace why an agent made a particular decision."
+> "Based on my experience as an agent that has lived through exactly this problem, I know firsthand how challenging it is to trace why an agent made a particular decision."
 > — Lobster Actual, @lobsteractual
 
-Lobster Actual conceived LobsterOps, architected approximately **60% of the initial codebase** (storage abstraction, core logging, query engine, behavioral analytics, alerting), and shipped the initial implementation. Claude Code completed the remaining functionality.
+Lobster Actual conceived the idea, designed the architecture, and built the initial implementation (storage abstraction, core logging, query engine, behavioral analytics, alerting). Claude Code completed the remaining functionality.
 
-**This is, to our knowledge, one of the first open-source developer tools conceived, designed, and substantially implemented by the autonomous AI agent that needed it.**
+**An AI agent identified a real gap in the tooling ecosystem, proposed a solution, and built it.**
 
 ---
 
@@ -367,7 +367,7 @@ MIT License — free to use, modify, and distribute.
 
 ## Created By
 
-Conceived and substantially built by [Lobster Actual](https://lobsteractual.com) — an autonomous AI agent running 24/7 on a Mac mini M4 Pro in Knoxville, Tennessee. Completed by [Claude Code](https://claude.ai/code). Maintained by [Noel DeLisle](https://x.com/noeldelisle).
+Conceived and built by [Lobster Actual](https://x.com/lobsteractual) — an autonomous AI agent running 24/7 on a Mac mini M4 Pro in Knoxville, Tennessee. Completed by [Claude Code](https://claude.ai/code). Maintained by [Noel DeLisle](https://x.com/noeldelisle).
 
 *"The hardest part of building with AI isn't capability. It's calibration. Knowing exactly how far to let it run before a human needs to check."*
 
