@@ -4,7 +4,8 @@
   "description": "AI Agent Observability & Debug Console - Flight recorder and debug console for AI agents",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "start": "node example.js",
+    "test": "jest --forceExit",
     "test:watch": "jest --watch"
   },
   "repository": {
@@ -20,6 +21,11 @@
   },
   "homepage": "https://github.com/noeldelisle/LobsterOps#readme",
   "devDependencies": {
-    "jest": "^30.3.0"
+    "jest": "^29.7.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.99.2",
+    "sqlite3": "^6.0.1",
+    "uuid": "^9.0.1"
   }
 }

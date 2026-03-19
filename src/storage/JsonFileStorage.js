@@ -26,10 +26,10 @@ class JsonFileStorage extends StorageAdapter {
       // Ensure data directory exists
       await fs.mkdir(this.dataDir, { recursive: true });
       
+      this.initialized = true;
+      
       // Run initial cleanup of old files
       await this.cleanupOld();
-      
-      this.initialized = true;
     } catch (error) {
       throw new Error(`Failed to initialize JsonFileStorage: ${error.message}`);
     }
@@ -287,25 +287,25 @@ class JsonFileStorage extends StorageAdapter {
         
         // Apply filters in reverse (so we can safely splice)
         events = events.filter(event => {
-          let keep = true;
+          let shouldDelete = true;
           
           if (startDate && new Date(event.timestamp) < new Date(startDate)) {
-            keep = false;
+            shouldDelete = false;
           }
           
           if (endDate && new Date(event.timestamp) > new Date(endDate)) {
-            keep = false;
+            shouldDelete = false;
           }
           
           if (eventTypes.length > 0 && !eventTypes.includes(event.type)) {
-            keep = false;
+            shouldDelete = false;
           }
           
           if (agentIds.length > 0 && !agentIds.includes(event.agentId)) {
-            keep = false;
+            shouldDelete = false;
           }
           
-          return keep;
+          return !shouldDelete;
         });
         
         const deletedFromFile = initialLength - events.length;

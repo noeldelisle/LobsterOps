@@ -29,7 +29,7 @@ class MemoryStorage extends StorageAdapter {
         ...event,
         id: event.id || this._generateId(),
         timestamp: event.timestamp || new Date().toISOString(),
-        storedAt: new Date().isoString()
+        storedAt: new Date().toISOString()
       };
 
       this.events.set(enrichedEvent.id, enrichedEvent);
@@ -152,22 +152,22 @@ class MemoryStorage extends StorageAdapter {
       const eventsToDelete = [];
       
       for (const [eventId, event] of this.events.entries()) {
-        let shouldDelete = false;
+        let shouldDelete = true;
         
         if (startDate && new Date(event.timestamp) < new Date(startDate)) {
-          shouldDelete = true;
+          shouldDelete = false;
         }
         
         if (endDate && new Date(event.timestamp) > new Date(endDate)) {
-          shouldDelete = true;
+          shouldDelete = false;
         }
         
         if (eventTypes.length > 0 && !eventTypes.includes(event.type)) {
-          shouldDelete = true;
+          shouldDelete = false;
         }
         
         if (agentIds.length > 0 && !agentIds.includes(event.agentId)) {
-          shouldDelete = true;
+          shouldDelete = false;
         }
         
         if (shouldDelete) {
