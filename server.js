@@ -640,7 +640,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
   <div class="stat s-red"><div class="stat-label">TOTAL EVENTS</div><div class="stat-val" id="s-events">—</div><div class="stat-hint">logged to supabase</div></div>
   <div class="stat s-green"><div class="stat-label">SUCCESS RATE</div><div class="stat-val" id="s-rate">—</div><div class="stat-hint">tool call accuracy</div></div>
   <div class="stat s-amber"><div class="stat-label">LOOPS DETECTED</div><div class="stat-val" id="s-loops">—</div><div class="stat-hint">infinite cycles caught</div></div>
-  <div class="stat s-blue"><div class="stat-label">INSTANCE</div><div class="stat-val" style="font-size:15px;padding-top:6px" id="s-instance">—</div><div class="stat-hint" id="s-backend">__BACKEND__</div></div>
+  <div class="stat s-blue"><div class="stat-label">INSTANCE</div><div class="stat-val" style="font-size:15px;padding-top:6px" id="s-instance">—</div><div class="stat-hint" id="s-backend">SUPABASE</div></div>
 </div>
 <div class="main">
   <div class="feed-panel">
