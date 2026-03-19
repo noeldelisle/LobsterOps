@@ -57,7 +57,7 @@ app.post('/login', (req, res) => {
 app.get('/logout', (req, res) => { req.session.destroy(); res.redirect('/'); });
 
 app.get('/dashboard', requireAuth, (req, res) => {
-  res.send(DASHBOARD_HTML.replace('__SUPABASE_URL__', SUPABASE_URL).replace('__SUPABASE_KEY__', SUPABASE_KEY).replace('__BACKEND__', backend));
+  res.send(DASHBOARD_HTML.replace('__SUPABASE_URL__', SUPABASE_URL).replace('__SUPABASE_KEY__', SUPABASE_KEY).replace(/__BACKEND__/g, backend));
 });
 
 app.get('/api/stats', requireAuth, async (req, res) => {
