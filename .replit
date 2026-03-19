@@ -27,3 +27,7 @@ args = "npm start"
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[deployment]
+deploymentTarget = "cloudrun"
+run = ["sh", "-c", "npm start"]
