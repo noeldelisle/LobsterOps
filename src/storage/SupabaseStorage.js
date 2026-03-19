@@ -315,12 +315,41 @@ class SupabaseStorage extends StorageAdapter {
     }
   }
 
-  async cleanupOld() {
+  async cleanupOld(maxAgeDays = 30) {
     if (!this.initialized) await this.init();
-    
-    // For Supabase, we could implement retention policies
-    // For now, return 0 as placeholder
-    return 0;
+
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - maxAgeDays);
+      const cutoffISO = cutoffDate.toISOString();
+
+      // Count events to delete
+      const { data: countData, error: countError } = await this._executeWithRetry(() =>
+        this.supabase
+          .from(this.tableName)
+          .select('id', { count: 'exact' })
+          .lt('timestamp', cutoffISO)
+      );
+
+      if (countError) throw countError;
+      const countToDelete = countData ? countData.length : 0;
+
+      if (countToDelete === 0) return 0;
+
+      // Delete old events
+      const { error: deleteError } = await this._executeWithRetry(() =>
+        this.supabase
+          .from(this.tableName)
+          .delete()
+          .lt('timestamp', cutoffISO)
+      );
+
+      if (deleteError) throw deleteError;
+
+      return countToDelete;
+    } catch (error) {
+      throw new Error(`Failed to cleanup old events: ${error.message}`);
+    }
   }
 
   async getStats() {

@@ -389,12 +389,33 @@ class SQLiteStorage extends StorageAdapter {
     }
   }
 
-  async cleanupOld() {
+  async cleanupOld(maxAgeDays = 30) {
     if (!this.initialized) await this.init();
-    
-    // For SQLite storage, we'll rely on application-level cleanup policies
-    // or this could be enhanced with a maxAgeDays config option
-    return 0; // Placeholder - implement based on retention policy if needed
+
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - maxAgeDays);
+      const cutoffISO = cutoffDate.toISOString();
+
+      // Count events to delete
+      const countResult = await this._executeQuery(
+        'SELECT COUNT(*) as count FROM lobsterops_events WHERE timestamp < ?',
+        [cutoffISO]
+      );
+      const countToDelete = countResult[0].count;
+
+      if (countToDelete === 0) return 0;
+
+      // Delete old events
+      await this._executeRun(
+        'DELETE FROM lobsterops_events WHERE timestamp < ?',
+        [cutoffISO]
+      );
+
+      return countToDelete;
+    } catch (error) {
+      throw new Error(`Failed to cleanup old events: ${error.message}`);
+    }
   }
 
   async getStats() {
