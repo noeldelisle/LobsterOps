@@ -5,7 +5,6 @@ version: 1.0.0
 metadata:
   openclaw:
     emoji: "\U0001F99E"
-    primaryEnv: LOBSTER_STORAGE
     requires:
       bins:
         - node

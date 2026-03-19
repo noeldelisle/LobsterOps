@@ -4,7 +4,7 @@
   "description": "AI Agent Observability & Debug Console - Flight recorder and debug console for AI agents",
   "main": "index.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node example.js",
     "test": "jest --forceExit",
     "test:watch": "jest --watch",
     "demo": "node example.js"
