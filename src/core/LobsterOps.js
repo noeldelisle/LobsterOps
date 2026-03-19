@@ -1,5 +1,10 @@
 const { StorageFactory } = require('../storage/StorageFactory');
 const { v4: uuidv4 } = require('uuid');
+const { PIIFilter } = require('./PIIFilter');
+const { Exporter } = require('./Exporter');
+const { DebugConsole } = require('./DebugConsole');
+const { Analytics } = require('./Analytics');
+const { AlertManager } = require('./AlertManager');
 
 /**
  * LobsterOps - AI Agent Observability & Debug Console
@@ -22,19 +27,27 @@ class LobsterOps {
    * @param {Object} options.storageConfig - Configuration for the storage backend
    * @param {boolean} options.enabled - Whether LobsterOps is enabled (default: true)
    * @param {string} options.instanceId - Unique identifier for this LobsterOps instance
+   * @param {Object} options.piiFiltering - PII filtering configuration
+   * @param {Object} options.alerts - Alert configuration
    */
   constructor(options = {}) {
     this.enabled = options.enabled !== false; // Default to true
     this.instanceId = options.instanceId || this._generateInstanceId();
     this.storageType = options.storageType || 'json'; // Default to JSON file storage
     this.storageConfig = options.storageConfig || {};
-    
+
     // Add instance ID to storage config for backends that might need it
     this.storageConfig.instanceId = this.instanceId;
-    
+
     this.storage = null;
     this.initialized = false;
-    
+
+    // PII filtering
+    this.piiFilter = new PIIFilter(options.piiFiltering || {});
+
+    // Alert manager
+    this.alertManager = new AlertManager();
+
     // Bind methods for easier use
     this.logEvent = this.logEvent.bind(this);
     this.logThought = this.logThought.bind(this);
@@ -87,16 +100,22 @@ class LobsterOps {
     }
     
     try {
+      // Apply PII filtering
+      const filteredEvent = this.piiFilter.filter(event);
+
       // Enrich the event with metadata
       const enrichedEvent = {
-        ...event,
+        ...filteredEvent,
         id: event.id || uuidv4(),
         timestamp: event.timestamp || new Date().toISOString(),
         lobsterOpsInstanceId: this.instanceId,
         loggedAt: new Date().toISOString(),
         ...options
       };
-      
+
+      // Evaluate alert rules
+      this.alertManager.evaluate(enrichedEvent);
+
       // Save to storage
       const eventId = await this.storage.saveEvent(enrichedEvent);
       return eventId;
@@ -417,6 +436,50 @@ class LobsterOps {
     } catch (error) {
       throw new Error(`Failed to close LobsterOps: ${error.message}`);
     }
+  }
+
+  /**
+   * Export events to a specific format
+   * @param {string} format - Export format: 'json', 'csv', or 'markdown'
+   * @param {Object} filter - Filter criteria for events to export
+   * @param {Object} options - Export and query options
+   * @returns {Promise<string>} - Exported data as string
+   */
+  async exportEvents(format = 'json', filter = {}, options = {}) {
+    const events = await this.queryEvents(filter, { limit: options.limit || 10000, ...options });
+
+    switch (format.toLowerCase()) {
+      case 'csv':
+        return Exporter.toCSV(events, options);
+      case 'markdown':
+      case 'md':
+        return Exporter.toMarkdown(events, options);
+      case 'json':
+      default:
+        return Exporter.toJSON(events, options);
+    }
+  }
+
+  /**
+   * Create a debug console for stepping through an agent's event trace
+   * @param {string} agentId - Agent ID to debug
+   * @param {Object} options - Query options
+   * @returns {Promise<DebugConsole>} - Interactive debug console
+   */
+  async createDebugConsole(agentId, options = {}) {
+    const events = await this.getAgentTrace(agentId, options);
+    return new DebugConsole(events);
+  }
+
+  /**
+   * Run behavioral analytics on events
+   * @param {Object} filter - Filter criteria
+   * @param {Object} options - Query options
+   * @returns {Promise<Object>} - Analytics report
+   */
+  async analyze(filter = {}, options = {}) {
+    const events = await this.queryEvents(filter, { limit: options.limit || 10000, ...options });
+    return Analytics.analyze(events);
   }
 
   /**
