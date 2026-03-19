@@ -2,3 +2,4 @@ node_modules/
 *.db
 lobsterops-data/
 .env
+*.db
