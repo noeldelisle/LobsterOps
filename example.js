@@ -10,12 +10,28 @@ async function runExample() {
   console.log('====================');
   
   // Create a LobsterOps instance
-  // Using SQLite storage - lightweight, file-based, works everywhere
+  // Choose your storage backend:
   const ops = new LobsterOps({
-    storageType: 'sqlite',           // Options: 'json', 'memory', 'sqlite', 'supabase' (coming soon)
+    // storageType: 'json',           // Zero dependency, works everywhere (DEFAULT)
+    // storageConfig: {
+    //   dataDir: './example-logs'    // Where to store JSON log files
+    // },
+    
+    // storageType: 'memory',         // In-memory only (great for testing)
+    // storageConfig: {},            // No config needed
+    
+    storageType: 'sqlite',           // Lightweight file-based SQL
     storageConfig: {
       filename: './example-lobsterops.db' // SQLite database file
     },
+    
+    // storageType: 'supabase',       // Cloud-based PostgreSQL (UNCOMMENT TO USE)
+    // storageConfig: {
+    //   supabaseUrl: 'YOUR_SUPABASE_URL',      // Get from Supabase project settings
+    //   supabaseKey: 'YOUR_SUPABASE_ANON_KEY', // Get from Supabase project settings
+    //   tableName: 'agent_events'              // Optional: custom table name
+    // },
+    
     instanceId: 'example-agent-001' // Optional: custom instance ID
   });
   
@@ -23,6 +39,10 @@ async function runExample() {
     // Initialize LobsterOps and storage backend
     await ops.init();
     console.log('✅ LobsterOps initialized');
+    
+    // Show which storage backend is being used
+    const stats = await ops.getStats();
+    console.log(`📦 Using storage backend: ${stats.backend}`);
     
     // Simulate logging various agent events
     console.log('\n📝 Logging agent events...');
@@ -115,17 +135,22 @@ async function runExample() {
     });
     console.log(`\n🔄 Updated error event with resolution info`);
     
-    // Get storage statistics
-    const stats = await ops.getStats();
+    // Get updated storage statistics
+    const updatedStats = await ops.getStats();
     console.log(`\n📊 Storage Statistics:`);
-    console.log(`   Backend: ${stats.backend}`);
-    console.log(`   Total Events: ${stats.eventCount || 0}`);
-    console.log(`   Database File: ${stats.filename}`);
-    console.log(`   Database Size: ${stats.databaseSizeMB} MB`);
-    console.log(`   Instance ID: ${stats.instanceId}`);
+    console.log(`   Backend: ${updatedStats.backend}`);
+    console.log(`   Total Events: ${updatedStats.eventCount || updatedStats.totalEvents || 0}`);
+    if (updatedStats.filename) {
+      console.log(`   Database File: ${updatedStats.filename}`);
+      console.log(`   Database Size: ${updatedStats.databaseSizeMB} MB`);
+    }
+    if (updatedStats.tableName) {
+      console.log(`   Table Name: ${updatedStats.tableName}`);
+    }
+    console.log(`   Instance ID: ${updatedStats.instanceId}`);
     
     console.log(`\n✅ Example completed successfully!`);
-    console.log(`💡 Try checking the './example-lobsterops.db' SQLite database file.`);
+    console.log(`💡 To use different storage backends, uncomment the desired configuration above.`);
     
   } catch (error) {
     console.error('❌ Example failed:', error);

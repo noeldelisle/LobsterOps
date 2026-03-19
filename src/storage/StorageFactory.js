@@ -1,6 +1,7 @@
 const { JsonFileStorage } = require('./JsonFileStorage');
 const { MemoryStorage } = require('./MemoryStorage');
 const { SQLiteStorage } = require('./SQLiteStorage');
+const { SupabaseStorage } = require('./SupabaseStorage');
 
 /**
  * Storage Factory
@@ -10,7 +11,7 @@ const { SQLiteStorage } = require('./SQLiteStorage');
  * - json: JSON file storage (zero dependency, works everywhere)
  * - memory: In-memory storage (for testing/temporary use)
  * - sqlite: SQLite storage (lightweight, file-based)
- * - supabase: Supabase storage (coming soon)
+ * - supabase: Supabase storage (cloud-based PostgreSQL)
  */
 class StorageFactory {
   /**
@@ -28,10 +29,9 @@ class StorageFactory {
       case 'sqlite':
         return new SQLiteStorage(config);
       case 'supabase':
-        // TODO: Implement Supabase storage
-        throw new Error('Supabase storage not yet implemented');
+        return new SupabaseStorage(config);
       default:
-        throw new Error(`Unsupported storage type: ${type}. Supported types: json, memory, sqlite`);
+        throw new Error(`Unsupported storage type: ${type}. Supported types: json, memory, sqlite, supabase`);
     }
   }
 
@@ -67,7 +67,7 @@ class StorageFactory {
    * @returns {Array<string>} - Supported storage types
    */
   static getSupportedTypes() {
-    return ['json', 'memory', 'sqlite']; // Supabase coming soon
+    return ['json', 'memory', 'sqlite', 'supabase'];
   }
 }
 
