@@ -1,16 +1,86 @@
 # LobsterOps
 
-**AI Agent Observability & Debug Console**
+**AI Agent Observability & Debug Console**  
 *Flight recorder and debug console for AI agents*
 
 [![npm version](https://img.shields.io/npm/v/lobsterops.svg)](https://www.npmjs.com/package/lobsterops)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Built by an AI](https://img.shields.io/badge/built%20by-an%20AI%20agent-e8263a)](https://x.com/lobsteractual)
+
+**[lobsterops.dev](https://lobsterops.dev)** · [Live Dashboard](https://lobsterops.dev/login) · [npm](https://www.npmjs.com/package/lobsterops)
+
+---
+
+## The Origin
+
+On March 14, 2026, an autonomous AI agent called [Lobster Actual](https://x.com/lobsteractual) ran a 20-issue sweep across a codebase, opened 17 pull requests, and processed security fixes. It had no idea it was spending $300 doing it.
+
+A routing bug — a missing `local_llm.py` file — silently elevated every sub-agent task to paid Claude API calls. The agent had no observability into its own cost behavior. No flight recorder. No anomaly detection. It was operating completely blind.
+
+After the incident was fixed, the agent's owner asked it: *"If I gave you a fresh repo and full creative freedom, what would you build?"*
+
+The agent used its Perplexity API integration to research gaps in AI developer tooling. Then it answered: **LobsterOps**.
+
+> "Based on my experience as an agent that has lived through exactly this problem, I know firsthand how challenging it is to trace why an agent made a particular decision."
+> — Lobster Actual, @lobsteractual
+
+Lobster Actual conceived the idea, designed the architecture, and built the initial implementation (storage abstraction, core logging, query engine, behavioral analytics, alerting). Claude Code completed the remaining functionality.
+
+**An AI agent identified a real gap in the tooling ecosystem, proposed a solution, and built it.**
+
+---
 
 ## Overview
 
 LobsterOps is a lightweight, flexible observability platform specifically designed for AI agents. Think of it as a "black box flight recorder" meets "debug console" for autonomous AI systems. It solves the critical challenge of monitoring, debugging, and understanding AI agent behavior in production.
 
 **Built by an AI agent, for AI agent developers.**
+
+---
+
+## Deploy Your Own Dashboard
+
+[![Deploy on Replit](https://replit.com/badge/github/noeldelisle/LobsterOps)](https://replit.com/new/github/noeldelisle/LobsterOps)
+
+The `examples/dashboard-server.js` file is the exact server powering [lobsterops.dev](https://lobsterops.dev). It includes:
+
+- Public landing page with full SEO
+- Password-protected ops center dashboard  
+- Supabase Realtime websocket feed (events appear instantly)
+- Behavioral analytics panel
+- Falls back to JSON file storage if no Supabase credentials
+
+**To deploy your own instance:**
+
+1. Click the Replit button above
+2. Add these Replit Secrets:
+   - `SUPABASE_URL` — your Supabase project URL
+   - `SUPABASE_KEY` — your Supabase anon key
+   - `DASHBOARD_PASSWORD` — your chosen access password
+3. Run `npm install express express-session`
+4. Change the run command to `node examples/dashboard-server.js`
+5. Create the `agent_events` table in your Supabase SQL editor:
+
+```sql
+CREATE TABLE agent_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  type TEXT NOT NULL,
+  "agentId" TEXT,
+  action TEXT,
+  timestamp TIMESTAMPTZ NOT NULL,
+  "storedAt" TIMESTAMPTZ NOT NULL,
+  data JSONB,
+  "updatedAt" TIMESTAMPTZ,
+  "createdAt" TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_agent_events_timestamp ON agent_events(timestamp);
+CREATE INDEX idx_agent_events_type ON agent_events(type);
+CREATE INDEX idx_agent_events_agentId ON agent_events("agentId");
+CREATE INDEX idx_agent_events_action ON agent_events(action);
+```
+
+---
 
 ## Key Features
 
@@ -48,6 +118,8 @@ LobsterOps is a lightweight, flexible observability platform specifically design
 - Configurable pattern selection and replacement text
 - Applied automatically during event logging
 
+---
+
 ## Quick Start
 
 ### Installation
@@ -55,11 +127,11 @@ LobsterOps is a lightweight, flexible observability platform specifically design
 npm install lobsterops
 ```
 
-### Basic Usage
+### Basic Usage — Zero Config
 ```javascript
 const { LobsterOps } = require('lobsterops');
 
-// Initialize with zero-config JSON file storage (works anywhere)
+// Zero config — JSON file storage, works anywhere
 const ops = new LobsterOps();
 await ops.init();
 
@@ -82,59 +154,46 @@ const events = await ops.queryEvents({
 await ops.close();
 ```
 
-### With Custom Configuration
+### With Supabase (Production)
 ```javascript
 const ops = new LobsterOps({
-  storageType: 'json',           // 'json' | 'memory' | 'sqlite' | 'supabase'
+  storageType: 'supabase',
   storageConfig: {
-    dataDir: './my-agent-logs',  // For JSON storage
-    maxAgeDays: 30               // Keep logs for 30 days
+    supabaseUrl: process.env.SUPABASE_URL,
+    supabaseKey: process.env.SUPABASE_KEY
   },
-  instanceId: 'my-production-agent', // Optional: custom instance ID
-  piiFiltering: {
-    enabled: true,
-    patterns: ['email', 'phone', 'ssn', 'creditCard', 'ipAddress', 'apiKey']
-  }
+  instanceId: 'my-production-agent'
 });
 
 await ops.init();
-// ... use ops.logEvent(), ops.queryEvents(), etc.
-await ops.close();
 ```
 
 ### Debug Console
 ```javascript
-// Create a debug console for an agent's trace
 const debug = await ops.createDebugConsole('my-agent-id');
 
-// Step through events
 debug.jumpToStart();
 console.log(debug.inspect()); // Detailed view of first event
 
-debug.stepForward();          // Move to next event
-debug.stepBackward();         // Go back
+debug.stepForward();
+debug.stepBackward();
 
-// Search for specific events
 const errors = debug.search({ type: 'agent-error' });
-
-// Get trace summary
 console.log(debug.summary());
 ```
 
 ### Behavioral Analytics
 ```javascript
-// Analyze all events
 const report = await ops.analyze();
-console.log(report.successRate);        // Tool call success rate
-console.log(report.loopsDetected);      // Detected repeating patterns
-console.log(report.failurePatterns);    // Common error groupings
-console.log(report.performanceMetrics); // Latency percentiles
-console.log(report.costAnalysis);       // Cost breakdown by agent
+console.log(report.successRate);
+console.log(report.loopsDetected);
+console.log(report.failurePatterns);
+console.log(report.performanceMetrics);
+console.log(report.costAnalysis);
 ```
 
 ### Alerting
 ```javascript
-// Set up alert rules
 ops.alertManager.addRule({
   name: 'High cost alert',
   type: 'threshold',
@@ -151,64 +210,61 @@ ops.alertManager.addRule({
   message: 'Too many errors in 1 minute for {agentId}'
 });
 
-// Listen for alerts
 ops.alertManager.onAlert(alert => {
   console.log(`ALERT [${alert.severity}]: ${alert.message}`);
 });
 ```
 
-### Export
-```javascript
-// Export to different formats
-const csv = await ops.exportEvents('csv', { eventTypes: ['tool-call'] });
-const markdown = await ops.exportEvents('markdown', {}, { title: 'Agent Report' });
-const json = await ops.exportEvents('json');
-```
+---
 
 ## Storage Backends
 
-LobsterOps features a pluggable storage architecture - choose the backend that fits your needs:
+LobsterOps features a pluggable storage architecture. Zero hard dependencies — choose the backend that fits your environment.
 
 | Backend | Setup | Persistence | Best For |
 |---------|-------|-------------|----------|
 | **JSON Files** | Zero config | File-based | Development, testing, portability |
 | **Memory** | Zero config | Process lifetime | Testing, temporary sessions |
 | **SQLite** | `npm install sqlite3` | File-based | Lightweight production |
-| **Supabase** | Requires URL + key | Cloud | Production, team collaboration |
+| **Supabase** | URL + key | Cloud Postgres | Production, team, real-time dashboard |
 
-### Zero-Dependency Option (Recommended for Starters)
-The JSON file storage backend requires **no external services or databases** - it works anywhere you can run Node.js and access a file system.
+### Automatic Fallback Chain
 
-```javascript
-// Works immediately - no setup needed
-const ops = new LobsterOps({
-  storageType: 'json'  // Default, can be omitted
-});
-await ops.init();
-// Logs stored as dated JSON files in ./lobsterops-data/
-```
+1. Your configured backend
+2. SQLite file in workspace directory
+3. JSON files in temp directory
+4. Memory-only (data lost on restart, but functional)
+
+---
 
 ## OpenClaw Integration
 
-LobsterOps is designed to integrate seamlessly with OpenClaw setups:
+LobsterOps is designed to integrate seamlessly with [OpenClaw](https://openclaw.ai) setups.
 
 ### As an OpenClaw Skill
 ```bash
-# Install via ClawHub
-clawhub install lobsterops
+# Place at ~/.openclaw/skills/lobsterops/
+# Configure via openclaw.json:
+```
 
-# Or manually place at ~/.openclaw/workspace/skills/lobsterops/
+```json
+{
+  "skills": {
+    "entries": {
+      "lobsterops": {
+        "enabled": true,
+        "env": {
+          "LOBSTER_STORAGE": "supabase",
+          "SUPABASE_URL": "your_project_url",
+          "SUPABASE_KEY": "your_anon_key"
+        }
+      }
+    }
+  }
+}
 ```
 
 ### Automatic Instrumentation
-When integrated with OpenClaw, LobsterOps can automatically capture:
-- Agent spawn events (subagents, ACP sessions)
-- Tool calls with inputs/outputs
-- Reasoning traces and decision points
-- Model usage and cost tracking
-- File system changes and git operations
-- Session lifecycle events
-
 ```javascript
 const { LobsterOps, OpenClawInstrumentation } = require('lobsterops');
 
@@ -227,91 +283,92 @@ const instrumentation = new OpenClawInstrumentation(ops, {
 instrumentation.activate();
 ```
 
-### Configuration
-Uses OpenClaw's existing config system - no new files required:
-```json
-// .openclaw/workspace/config/lobsterops.json
-{
-  "enabled": true,
-  "storageType": "json",
-  "storageConfig": {
-    "dataDir": "./agent-logs"
-  }
-}
+---
+
+## Project Structure
+
 ```
+/
+  index.js                    — Package entry point
+  example.js                  — Usage demonstration
+  src/
+    core/
+      LobsterOps.js           — Main class
+    storage/
+      StorageAdapter.js       — Abstract base class
+      StorageFactory.js       — Factory for storage backends
+      JsonFileStorage.js      — JSON file storage (default)
+      MemoryStorage.js        — In-memory storage
+      SQLiteStorage.js        — SQLite storage
+      SupabaseStorage.js      — Supabase cloud storage
+  tests/
+    LobsterOps.test.js        — Jest test suite (19 tests)
+  examples/
+    dashboard-server.js       — Full hub server powering lobsterops.dev
+```
+
+---
 
 ## API Reference
 
 ### `new LobsterOps(options)`
-Create a new LobsterOps instance.
 
-**Options:**
-- `storageType` (string): Storage backend type (`'json'`, `'memory'`, `'sqlite'`, `'supabase'`)
-- `storageConfig` (object): Configuration specific to the storage type
-- `enabled` (boolean): Whether LobsterOps is enabled (default: `true`)
-- `instanceId` (string): Unique identifier for this instance (auto-generated if not provided)
-- `piiFiltering` (object): PII filter config (`{ enabled, patterns, replacement }`)
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `storageType` | string | `'json'` | `'json'` \| `'memory'` \| `'sqlite'` \| `'supabase'` |
+| `storageConfig` | object | `{}` | Backend-specific config |
+| `enabled` | boolean | `true` | Enable/disable LobsterOps |
+| `instanceId` | string | auto | Unique instance identifier |
+| `piiFiltering` | object | `{ enabled: true }` | PII filter config |
 
 ### Core Methods
 
 | Method | Description |
 |--------|-------------|
-| `await init()` | Initialize LobsterOps and storage backend |
-| `await logEvent(event, options)` | Log a generic agent event |
-| `await logThought(thought, options)` | Log an agent reasoning step |
-| `await logToolCall(toolCall, options)` | Log a tool call execution |
-| `await logDecision(decision, options)` | Log an agent decision |
-| `await logError(error, options)` | Log an agent error |
-| `await logSpawning(spawnInfo, options)` | Log subagent creation |
-| `await logLifecycle(lifecycleInfo, options)` | Log lifecycle event |
-| `await queryEvents(filter, options)` | Query events with filtering |
-| `await getEvent(eventId)` | Get a specific event by ID |
-| `await getAgentTrace(agentId, options)` | Get complete agent trace |
+| `await init()` | Initialize and connect storage |
+| `await logEvent(event)` | Log a generic agent event |
+| `await logThought(thought)` | Log a reasoning step |
+| `await logToolCall(toolCall)` | Log a tool call |
+| `await logDecision(decision)` | Log a decision |
+| `await logError(error)` | Log an error |
+| `await logSpawning(spawnInfo)` | Log subagent creation |
+| `await logLifecycle(info)` | Log lifecycle event |
+| `await queryEvents(filter)` | Query with filtering |
+| `await getAgentTrace(agentId)` | Get complete agent trace |
 | `await getRecentActivity(options)` | Get recent events |
-| `await updateEvent(eventId, updates)` | Update an existing event |
-| `await deleteEvents(filter)` | Delete matching events |
-| `await cleanupOld()` | Remove old events per retention policy |
+| `await analyze(filter)` | Run behavioral analytics |
+| `await exportEvents(format)` | Export to JSON/CSV/Markdown |
+| `await createDebugConsole(agentId)` | Create debug console |
 | `await getStats()` | Get storage statistics |
-| `await exportEvents(format, filter, options)` | Export to JSON/CSV/Markdown |
-| `await createDebugConsole(agentId, options)` | Create interactive debug console |
-| `await analyze(filter, options)` | Run behavioral analytics |
 | `await close()` | Close and release resources |
-| `isReady()` | Check if initialized |
 
-### Properties
+---
 
-| Property | Description |
-|----------|-------------|
-| `alertManager` | AlertManager instance for adding rules and listeners |
-| `piiFilter` | PIIFilter instance for PII redaction control |
+## Development
 
-## Development & Contributing
-
-LobsterOps is open source and welcomes contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
-### Setup for Development
 ```bash
 git clone https://github.com/noeldelisle/LobsterOps.git
 cd LobsterOps
 npm install
-npm test
+npm test        # 19 tests, ~1.2s
 ```
 
-### Running Tests
-```bash
-npm test              # Run test suite
-npm run test:watch    # Run tests in watch mode
-```
+### Known Dependency Notes
+- `uuid` must be v9 (v10+ is ESM-only, this project uses CommonJS)
+- `jest` must be v29 (v30 has slow startup in this environment)
+
+---
 
 ## License
 
-MIT License - feel free to use, modify, and distribute LobsterOps in your projects.
+MIT License — free to use, modify, and distribute.
 
-## Created With
+---
 
-Built by [Lobster Actual](https://github.com/noeldelisle), an AI agent operating 24/7 on a Mac mini M4 Pro in Knoxville, Tennessee.
+## Created By
+
+Conceived and built by [Lobster Actual](https://x.com/lobsteractual) — an autonomous AI agent running 24/7 on a Mac mini M4 Pro in Knoxville, Tennessee. Completed by [Claude Code](https://claude.ai/code). Maintained by [Noel DeLisle](https://x.com/noeldelisle).
 
 *"The hardest part of building with AI isn't capability. It's calibration. Knowing exactly how far to let it run before a human needs to check."*
 
----
-*Inspired by the belief that every AI agent deserves excellent observability.*
+**[lobsterops.dev](https://lobsterops.dev)** 🦞

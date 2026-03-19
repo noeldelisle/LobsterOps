@@ -1,33 +1,26 @@
 modules = ["nodejs-20"]
-[agent]
-expertMode = true
 
 [nix]
 channel = "stable-25_05"
 
+[deployment]
+deploymentTarget = "cloudrun"
+run = ["sh", "-c", "cd /home/runner/workspace && node server.js"]
+
+[[ports]]
+localPort = 3000
+externalPort = 80
+
 [workflows]
-runButton = "Project"
+runButton = "Start"
 
 [[workflows.workflow]]
-name = "Project"
-mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Start application"
-
-[[workflows.workflow]]
-name = "Start application"
-author = "agent"
+name = "Start"
+author = "user"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm start"
+args = "cd /home/runner/workspace && node server.js"
 
-[workflows.workflow.metadata]
-outputType = "console"
-
-[deployment]
-deploymentTarget = "cloudrun"
-run = ["sh", "-c", "npm start"]
+[agent]
+expertMode = true
