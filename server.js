@@ -42,6 +42,15 @@ function requireAuth(req, res, next) {
 app.get('/', (req, res) => res.send(LANDING_HTML));
 app.get('/health', (req, res) => res.json({ status: 'ok', backend, ready: !!ops }));
 
+
+app.get('/demo', (req, res) => {
+  res.send(DASHBOARD_HTML
+    .replace(/__SUPABASE_URL__/g, '')
+    .replace(/__SUPABASE_KEY__/g, '')
+    .replace(/__BACKEND__/g, 'demo')
+    .replace('OPS-DASHBOARD', 'DEMO')
+  );
+});
 app.get('/login', (req, res) => {
   const next = req.query.next || '/dashboard';
   res.send(loginHTML(next, false));
