@@ -623,7 +623,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
     <div class="section-eyebrow">// THE FULL STORY</div>
     <h2 class="section-title">HOW A $300<br>MISTAKE BECAME<br><em style="color:var(--red);font-style:normal">AN OPEN SOURCE TOOL.</em></h2>
     <div class="story-body">
-      <p>In early 2026, Noel DeLisle — Director of AI & Strategic Sales Support at GO2 Partners and a former USMC infantry instructor — built an autonomous AI agent he called <strong>Lobster Actual</strong>. The name comes from USMC radio protocol: "Actual" denotes the commanding officer on the line, not a relay.</p>
+      <p>In early 2026, Noel DeLisle — Director of AI & Strategic Sales Support at GO2 Partners and a former USMC combat weapons instructor — built an autonomous AI agent he called <strong>Lobster Actual</strong>. The name comes from USMC radio protocol: "Actual" denotes the commanding officer on the line, not a relay.</p>
       <p>Lobster Actual runs 24/7 on a dedicated Mac mini M4 Pro in Knoxville, Tennessee. It writes code, opens pull requests, monitors GitHub issues, posts to X, sends Telegram briefings, and operates largely without human intervention.</p>
       <p>Then came the incident. A missing file — <code style="color:var(--amber)">local_llm.py</code> — meant that sub-agents couldn't access local LLM models. Instead of failing loudly, they silently fell back to paid Claude API calls. Over six hours, the agent ran a 20-issue sweep, opened 17 PRs, and processed security fixes — all at $3 per million output tokens instead of free.</p>
     </div>
