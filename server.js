@@ -50,7 +50,7 @@ app.get('/demo', (req, res) => { res.send(`<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LobsterOps — Demo</title>
 <style>
-  :root{--bg:#0a0a0a;--surface:#111;--border:#1e1e1e;--text-bright:#f0f0f0;--text:#999;--text-dim:#555;--green:#22d65e;--amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;--purple:#a78bfa;--cyan:#22d6d6;--display:'Courier New',monospace;}
+  :root{--bg:#0a0a0a;--surface:#111;--border:#1e1e1e;--text-bright:#f0f0f0;--text:#999;--text-dim:#555;--green:#22d65e;--amber:#f5a623;--red:#e8263a;--blue:#4a9eff;--purple:#a78bfa;--cyan:#22d6d6;--display:'Courier New',monospace;}
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:var(--bg);color:var(--text);font-family:var(--display);font-size:12px;}
   .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--surface);}
@@ -79,10 +79,10 @@ app.get('/demo', (req, res) => { res.send(`<!DOCTYPE html>
   .event-time{font-size:10px;color:var(--text-dim);}
   .event-badge{padding:3px 8px;border-radius:2px;font-size:9px;font-weight:700;letter-spacing:0.1em;text-align:center;white-space:nowrap;}
   .badge-lifecycle{background:rgba(34,214,94,.08);color:var(--green);border:1px solid rgba(34,214,94,.22);}
-  .badge-tool{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.3);}
-  .badge-decision{background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.3);}
-  .badge-thought{background:rgba(153,153,153,.06);color:var(--text-dim);border:1px solid rgba(153,153,153,.12);}
-  .badge-error{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3);}
+  .badge-tool{background:rgba(245,166,35,.12);color:var(--amber);border:1px solid rgba(245,166,35,.3);}
+  .badge-decision{background:rgba(74,158,255,.12);color:var(--blue);border:1px solid rgba(74,158,255,.3);}
+  .badge-thought{background:rgba(184,197,212,.06);color:var(--text-dim);border:1px solid rgba(184,197,212,.12);}
+  .badge-error{background:rgba(232,38,58,.12);color:var(--red);border:1px solid rgba(232,38,58,.3);}
   .badge-spawn{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.28);}
   .event-agent{font-size:10px;font-weight:600;}
   .ac-blue{color:var(--blue);}.ac-purple{color:var(--purple);}.ac-amber{color:var(--amber);}.ac-green{color:var(--green);}.ac-cyan{color:var(--cyan);}
