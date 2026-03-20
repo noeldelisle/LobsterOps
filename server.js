@@ -50,7 +50,7 @@ app.get('/demo', (req, res) => { res.send(`<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LobsterOps — Demo</title>
 <style>
-  :root{--bg:#0a0a0a;--surface:#111;--border:#1e1e1e;--text-bright:#f0f0f0;--text:#999;--text-dim:#555;--green:#22d65e;--amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;--display:'Courier New',monospace;}
+  :root{--bg:#0a0a0a;--surface:#111;--border:#1e1e1e;--text-bright:#f0f0f0;--text:#999;--text-dim:#555;--green:#22d65e;--amber:#f59e0b;--red:#ef4444;--blue:#3b82f6;--purple:#a78bfa;--cyan:#22d6d6;--display:'Courier New',monospace;}
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:var(--bg);color:var(--text);font-family:var(--display);font-size:12px;}
   .topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--surface);}
@@ -68,6 +68,7 @@ app.get('/demo', (req, res) => { res.send(`<!DOCTYPE html>
   .stat-label{font-size:9px;letter-spacing:0.15em;color:var(--text-dim);margin-bottom:8px;}
   .stat-val{font-size:28px;font-weight:700;color:var(--text-bright);}
   .stat-hint{font-size:10px;color:var(--text-dim);margin-top:4px;}
+  .mob-tabs{display:none;}
   .main{display:grid;grid-template-columns:1fr 280px;height:calc(100vh - 160px);}
   .feed{border-right:1px solid var(--border);overflow-y:auto;}
   .feed-header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);}
@@ -76,13 +77,15 @@ app.get('/demo', (req, res) => { res.send(`<!DOCTYPE html>
   .event-row{display:grid;grid-template-columns:70px 90px 140px 1fr 20px 60px;align-items:center;padding:8px 16px;border-bottom:1px solid #0f0f0f;gap:8px;}
   .event-row:hover{background:#0f0f0f;}
   .event-time{font-size:10px;color:var(--text-dim);}
-  .event-badge{padding:3px 8px;border-radius:2px;font-size:9px;font-weight:700;letter-spacing:0.1em;text-align:center;}
-  .badge-lifecycle{background:#1a2a1a;color:var(--green);border:1px solid #2a4a2a;}
-  .badge-tool{background:#1a1a2a;color:#818cf8;border:1px solid #2a2a4a;}
-  .badge-decision{background:#1a1a2a;color:var(--blue);border:1px solid #1e3a5f;}
-  .badge-thought{background:#1a1a1a;color:var(--text);border:1px solid #2a2a2a;}
-  .badge-error{background:#2a1a1a;color:var(--red);border:1px solid #4a2a2a;}
-  .event-agent{font-size:10px;color:var(--text);}
+  .event-badge{padding:3px 8px;border-radius:2px;font-size:9px;font-weight:700;letter-spacing:0.1em;text-align:center;white-space:nowrap;}
+  .badge-lifecycle{background:rgba(34,214,94,.08);color:var(--green);border:1px solid rgba(34,214,94,.22);}
+  .badge-tool{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.3);}
+  .badge-decision{background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.3);}
+  .badge-thought{background:rgba(153,153,153,.06);color:var(--text-dim);border:1px solid rgba(153,153,153,.12);}
+  .badge-error{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.3);}
+  .badge-spawn{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.28);}
+  .event-agent{font-size:10px;font-weight:600;}
+  .ac-blue{color:var(--blue);}.ac-purple{color:var(--purple);}.ac-amber{color:var(--amber);}.ac-green{color:var(--green);}.ac-cyan{color:var(--cyan);}
   .event-action{font-size:10px;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .event-check{color:var(--green);font-size:12px;}
   .event-dur{font-size:10px;color:var(--text-dim);text-align:right;}
@@ -100,6 +103,30 @@ app.get('/demo', (req, res) => { res.send(`<!DOCTYPE html>
   .footer{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-top:1px solid var(--border);background:var(--surface);font-size:10px;color:var(--text-dim);}
   .cdot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;}
   .demo-banner{background:#1a1500;border-bottom:1px solid var(--amber);padding:6px 20px;font-size:10px;color:var(--amber);letter-spacing:0.1em;text-align:center;}
+  @media(max-width:768px){
+    body{overflow-y:auto;}
+    .topbar{padding:10px 14px;}
+    .time,.badge-live{display:none;}
+    .stats{grid-template-columns:repeat(2,1fr);}
+    .stat:nth-child(2){border-right:none;}
+    .mob-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface);}
+    .mob-tab{flex:1;padding:10px;font-size:10px;letter-spacing:0.15em;cursor:pointer;background:none;border:none;color:var(--text-dim);font-family:var(--display);border-bottom:2px solid transparent;}
+    .mob-tab.active{color:var(--text-bright);border-bottom-color:var(--green);}
+    .main{grid-template-columns:1fr;height:auto;}
+    #panel-feed{height:60vh;overflow-y:auto;border-right:none;}
+    #panel-analysis{padding-bottom:20px;}
+    body:not(.show-analysis) #panel-analysis{display:none;}
+    body.show-analysis #panel-feed{display:none;}
+    .event-row{display:flex;flex-wrap:wrap;padding:7px 14px;align-items:center;column-gap:8px;row-gap:0;}
+    .event-badge{order:1;}
+    .event-action{order:2;flex:1;min-width:0;}
+    .event-row::after{content:'';flex:0 0 100%;height:3px;order:3;}
+    .event-time{order:4;}
+    .event-agent{order:5;flex:1;}
+    .event-check{order:6;}
+    .event-dur{order:7;}
+    .footer{flex-direction:column;gap:4px;text-align:center;padding:10px 16px;}
+  }
 </style>
 </head>
 <body>
@@ -118,34 +145,38 @@ app.get('/demo', (req, res) => { res.send(`<!DOCTYPE html>
   <div class="stat"><div class="stat-label">TOTAL EVENTS</div><div class="stat-val">47</div><div class="stat-hint">simulated session</div></div>
   <div class="stat"><div class="stat-label">SUCCESS RATE</div><div class="stat-val">94%</div><div class="stat-hint">tool call accuracy</div></div>
   <div class="stat"><div class="stat-label">LOOPS DETECTED</div><div class="stat-val" style="font-size:14px;padding-top:8px;">no infinite cycles</div></div>
-  <div class="stat"><div class="stat-label">INSTANCE</div><div class="stat-val" style="font-size:15px;padding-top:6px;">my-agent</div><div class="stat-hint">supabase</div></div>
+  <div class="stat"><div class="stat-label">INSTANCE</div><div class="stat-val" style="font-size:15px;padding-top:6px;">alpha-1</div><div class="stat-hint">supabase</div></div>
+</div>
+<div class="mob-tabs">
+  <button class="mob-tab active" id="tab-feed" onclick="mobTab('feed')">FEED</button>
+  <button class="mob-tab" id="tab-analysis" onclick="mobTab('analysis')">ANALYSIS</button>
 </div>
 <div class="main">
-  <div class="feed">
+  <div class="feed" id="panel-feed">
     <div class="feed-header"><span class="feed-title">// FLIGHT RECORDER</span><span class="feed-count">47 events</span></div>
-    <div class="event-row"><span class="event-time">09:00:01</span><span class="event-badge badge-lifecycle">LIFECYCLE</span><span class="event-agent">my-agent</span><span class="event-action">session-start</span><span class="event-check">✓</span><span class="event-dur"></span></div>
-    <div class="event-row"><span class="event-time">09:00:02</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent">my-agent</span><span class="event-action">read_file config.json</span><span class="event-check">✓</span><span class="event-dur">32ms</span></div>
-    <div class="event-row"><span class="event-time">09:00:03</span><span class="event-badge badge-thought">THOUGHT</span><span class="event-agent">my-agent</span><span class="event-action">checking task queue for pending items</span><span class="event-check">✓</span><span class="event-dur"></span></div>
-    <div class="event-row"><span class="event-time">09:00:04</span><span class="event-badge badge-decision">DECISION</span><span class="event-agent">my-agent</span><span class="event-action">route task to local model</span><span class="event-check">✓</span><span class="event-dur"></span></div>
-    <div class="event-row"><span class="event-time">09:00:05</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent">my-agent</span><span class="event-action">github list_issues label:agent</span><span class="event-check">✓</span><span class="event-dur">280ms</span></div>
-    <div class="event-row"><span class="event-time">09:00:06</span><span class="event-badge badge-thought">THOUGHT</span><span class="event-agent">my-agent</span><span class="event-action">2 open issues found, starting with highest priority</span><span class="event-check">✓</span><span class="event-dur"></span></div>
-    <div class="event-row"><span class="event-time">09:00:07</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent">my-agent</span><span class="event-action">spawn subagent for code generation</span><span class="event-check">✓</span><span class="event-dur">110ms</span></div>
-    <div class="event-row"><span class="event-time">09:00:38</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent">subagent-001</span><span class="event-action">write_file src/api/handler.js</span><span class="event-check">✓</span><span class="event-dur">920ms</span></div>
-    <div class="event-row"><span class="event-time">09:00:52</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent">subagent-001</span><span class="event-action">run_tests api.test.js — 14 passed</span><span class="event-check">✓</span><span class="event-dur">1.8s</span></div>
-    <div class="event-row"><span class="event-time">09:00:55</span><span class="event-badge badge-decision">DECISION</span><span class="event-agent">my-agent</span><span class="event-action">spawn reviewer agent for PR</span><span class="event-check">✓</span><span class="event-dur"></span></div>
-    <div class="event-row"><span class="event-time">09:01:01</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent">reviewer</span><span class="event-action">review diff issue #12 — APPROVE</span><span class="event-check">✓</span><span class="event-dur">5.8s</span></div>
-    <div class="event-row"><span class="event-time">09:01:02</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent">my-agent</span><span class="event-action">github create_pr fix/api-handler</span><span class="event-check">✓</span><span class="event-dur">390ms</span></div>
-    <div class="event-row"><span class="event-time">09:01:03</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent">my-agent</span><span class="event-action">notify operator — PR ready for review</span><span class="event-check">✓</span><span class="event-dur">160ms</span></div>
-    <div class="event-row"><span class="event-time">09:03:15</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent">my-agent</span><span class="event-action">web_search recent AI agent frameworks</span><span class="event-check">✓</span><span class="event-dur">1.6s</span></div>
-    <div class="event-row"><span class="event-time">09:03:18</span><span class="event-badge badge-thought">THOUGHT</span><span class="event-agent">my-agent</span><span class="event-action">summarizing research for operator briefing</span><span class="event-check">✓</span><span class="event-dur"></span></div>
-    <div class="event-row"><span class="event-time">09:05:00</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent">my-agent</span><span class="event-action">cost_guard check — within budget</span><span class="event-check">✓</span><span class="event-dur">48ms</span></div>
-    <div class="event-row"><span class="event-time">09:06:00</span><span class="event-badge badge-error">ERROR</span><span class="event-agent">subagent-002</span><span class="event-action">model timeout — retrying with fallback</span><span class="event-check" style="color:var(--amber)">⚠</span><span class="event-dur"></span></div>
-    <div class="event-row"><span class="event-time">09:06:04</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent">subagent-002</span><span class="event-action">retry succeeded on fallback model</span><span class="event-check">✓</span><span class="event-dur">810ms</span></div>
-    <div class="event-row"><span class="event-time">09:10:30</span><span class="event-badge badge-lifecycle">LIFECYCLE</span><span class="event-agent">my-agent</span><span class="event-action">context-compaction triggered</span><span class="event-check">✓</span><span class="event-dur"></span></div>
-    <div class="event-row"><span class="event-time">09:12:00</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent">my-agent</span><span class="event-action">write_file memory/session-summary.md</span><span class="event-check">✓</span><span class="event-dur">55ms</span></div>
-    <div class="event-row"><span class="event-time">09:12:01</span><span class="event-badge badge-lifecycle">LIFECYCLE</span><span class="event-agent">my-agent</span><span class="event-action">session-end — 47 events logged</span><span class="event-check">✓</span><span class="event-dur"></span></div>
+    <div class="event-row"><span class="event-time">09:00:01</span><span class="event-badge badge-lifecycle">LIFECYCLE</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">session-start</span><span class="event-check">✓</span><span class="event-dur"></span></div>
+    <div class="event-row"><span class="event-time">09:00:02</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">read_file config.json</span><span class="event-check">✓</span><span class="event-dur">32ms</span></div>
+    <div class="event-row"><span class="event-time">09:00:03</span><span class="event-badge badge-thought">THOUGHT</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">checking task queue for pending items</span><span class="event-check">✓</span><span class="event-dur"></span></div>
+    <div class="event-row"><span class="event-time">09:00:04</span><span class="event-badge badge-decision">DECISION</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">route task to local model</span><span class="event-check">✓</span><span class="event-dur"></span></div>
+    <div class="event-row"><span class="event-time">09:00:05</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">github list_issues label:agent</span><span class="event-check">✓</span><span class="event-dur">280ms</span></div>
+    <div class="event-row"><span class="event-time">09:00:06</span><span class="event-badge badge-thought">THOUGHT</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">2 open issues found, starting with highest priority</span><span class="event-check">✓</span><span class="event-dur"></span></div>
+    <div class="event-row"><span class="event-time">09:00:07</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">spawn subagent for code generation</span><span class="event-check">✓</span><span class="event-dur">110ms</span></div>
+    <div class="event-row"><span class="event-time">09:00:38</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent ac-purple">coder-01</span><span class="event-action">write_file src/api/handler.js</span><span class="event-check">✓</span><span class="event-dur">920ms</span></div>
+    <div class="event-row"><span class="event-time">09:00:52</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent ac-purple">coder-01</span><span class="event-action">run_tests api.test.js — 14 passed</span><span class="event-check">✓</span><span class="event-dur">1.8s</span></div>
+    <div class="event-row"><span class="event-time">09:00:55</span><span class="event-badge badge-decision">DECISION</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">spawn reviewer agent for PR</span><span class="event-check">✓</span><span class="event-dur"></span></div>
+    <div class="event-row"><span class="event-time">09:01:01</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent ac-green">reviewer-01</span><span class="event-action">review diff issue #12 — APPROVE</span><span class="event-check">✓</span><span class="event-dur">5.8s</span></div>
+    <div class="event-row"><span class="event-time">09:01:02</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">github create_pr fix/api-handler</span><span class="event-check">✓</span><span class="event-dur">390ms</span></div>
+    <div class="event-row"><span class="event-time">09:01:03</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">notify operator — PR ready for review</span><span class="event-check">✓</span><span class="event-dur">160ms</span></div>
+    <div class="event-row"><span class="event-time">09:03:15</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">web_search recent AI agent frameworks</span><span class="event-check">✓</span><span class="event-dur">1.6s</span></div>
+    <div class="event-row"><span class="event-time">09:03:18</span><span class="event-badge badge-thought">THOUGHT</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">summarizing research for operator briefing</span><span class="event-check">✓</span><span class="event-dur"></span></div>
+    <div class="event-row"><span class="event-time">09:05:00</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">cost_guard check — within budget</span><span class="event-check">✓</span><span class="event-dur">48ms</span></div>
+    <div class="event-row"><span class="event-time">09:06:00</span><span class="event-badge badge-error">ERROR</span><span class="event-agent ac-amber">coder-02</span><span class="event-action">model timeout — retrying with fallback</span><span class="event-check" style="color:var(--amber)">⚠</span><span class="event-dur"></span></div>
+    <div class="event-row"><span class="event-time">09:06:04</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent ac-amber">coder-02</span><span class="event-action">retry succeeded on fallback model</span><span class="event-check">✓</span><span class="event-dur">810ms</span></div>
+    <div class="event-row"><span class="event-time">09:10:30</span><span class="event-badge badge-lifecycle">LIFECYCLE</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">context-compaction triggered</span><span class="event-check">✓</span><span class="event-dur"></span></div>
+    <div class="event-row"><span class="event-time">09:12:00</span><span class="event-badge badge-tool">TOOL</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">write_file memory/session-summary.md</span><span class="event-check">✓</span><span class="event-dur">55ms</span></div>
+    <div class="event-row"><span class="event-time">09:12:01</span><span class="event-badge badge-lifecycle">LIFECYCLE</span><span class="event-agent ac-blue">orchestrator</span><span class="event-action">session-end — 47 events logged</span><span class="event-check">✓</span><span class="event-dur"></span></div>
   </div>
-  <div class="analysis">
+  <div class="analysis" id="panel-analysis">
     <div class="analysis-title">// ANALYSIS</div>
     <div class="a-section"><div class="a-label">SUCCESS RATE</div><div class="a-val">94%</div><div class="gauge"><div class="gauge-fill" style="width:94%"></div></div><div style="font-size:10px;color:var(--text-dim);margin-top:6px">TOOL CALLS <span style="float:right">47 total</span></div></div>
     <div class="a-section"><div class="a-label">PERFORMANCE</div><div class="perf-grid"><div class="perf-box"><div class="perf-label">P50 LATENCY</div><div class="perf-val">0.3s</div></div><div class="perf-box"><div class="perf-label">P95 LATENCY</div><div class="perf-val">2.1s</div></div><div class="perf-box"><div class="perf-label">LOOPS</div><div class="perf-val">0</div></div><div class="perf-box"><div class="perf-label">EVENTS</div><div class="perf-val">47</div></div></div></div>
@@ -157,6 +188,7 @@ app.get('/demo', (req, res) => { res.send(`<!DOCTYPE html>
 <script>
 function tick(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleTimeString('en-US',{timeZone:'America/New_York',hour12:false})+' ET';}
 tick();setInterval(tick,1000);
+function mobTab(which){const a=which==='analysis';document.body.classList.toggle('show-analysis',a);document.getElementById('tab-feed').classList.toggle('active',!a);document.getElementById('tab-analysis').classList.toggle('active',a);}
 </script>
 </body>
 </html>`); });
@@ -679,7 +711,7 @@ const DASHBOARD_HTML = `<!DOCTYPE html>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#050709;--panel:#0b0f14;--card:#0f1620;--border:#1a2332;--red:#e8263a;--amber:#f5a623;--green:#22d65e;--blue:#4a9eff;--purple:#a78bfa;--text:#b8c5d4;--text-bright:#dce8f4;--text-dim:#4a5a6a;--mono:'Share Tech Mono',monospace;--display:'Orbitron',sans-serif;}
+:root{--bg:#050709;--panel:#0b0f14;--card:#0f1620;--border:#1a2332;--red:#e8263a;--amber:#f5a623;--green:#22d65e;--blue:#4a9eff;--purple:#a78bfa;--cyan:#22d6d6;--text:#b8c5d4;--text-bright:#dce8f4;--text-dim:#4a5a6a;--mono:'Share Tech Mono',monospace;--display:'Orbitron',sans-serif;}
 html,body{height:100%;overflow:hidden}
 body{font-family:var(--mono);background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
 body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);pointer-events:none;z-index:9999;}
@@ -709,6 +741,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .stat-label{font-family:var(--display);font-size:8px;letter-spacing:3px;color:var(--text-dim);margin-bottom:7px}
 .stat-val{font-family:var(--display);font-weight:700;font-size:28px;color:var(--text-bright);line-height:1}
 .stat-hint{font-size:10px;color:var(--text-dim);margin-top:5px}
+.mob-tabs{display:none;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;}
 .main{display:grid;grid-template-columns:1fr 320px;gap:1px;background:var(--border);flex:1;overflow:hidden;min-height:0}
 .feed-panel{background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
 .panel-head{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0}
@@ -721,7 +754,7 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .ev.new-ev{animation:flashIn .7s ease forwards}
 @keyframes flashIn{0%{background:rgba(74,158,255,0.18);opacity:0;transform:translateX(-8px)}50%{background:rgba(74,158,255,0.06)}100%{background:transparent;opacity:1;transform:none}}
 .ev:hover{background:rgba(255,255,255,0.018)}
-.ev-time{color:var(--text-dim)}.ev-agent{color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ev-action{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ev-dur{color:var(--text-dim);text-align:right;white-space:nowrap}
+.ev-time{color:var(--text-dim)}.ev-agent{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ev-action{color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ev-dur{color:var(--text-dim);text-align:right;white-space:nowrap}
 .badge{display:inline-block;padding:1px 5px;border-radius:2px;font-size:9px;letter-spacing:1px;font-family:var(--display);font-weight:500;white-space:nowrap}
 .b-tool{background:rgba(245,166,35,.12);color:var(--amber);border:1px solid rgba(245,166,35,.3)}.b-decision{background:rgba(74,158,255,.12);color:var(--blue);border:1px solid rgba(74,158,255,.3)}.b-error{background:rgba(232,38,58,.12);color:var(--red);border:1px solid rgba(232,38,58,.3)}.b-thought{background:rgba(184,197,212,.06);color:var(--text-dim);border:1px solid rgba(184,197,212,.12)}.b-lifecycle{background:rgba(34,214,94,.08);color:var(--green);border:1px solid rgba(34,214,94,.22)}.b-spawn{background:rgba(167,139,250,.12);color:var(--purple);border:1px solid rgba(167,139,250,.28)}.b-default{background:rgba(184,197,212,.08);color:var(--text);border:1px solid var(--border)}
 .ok{color:var(--green)}.err{color:var(--red)}
@@ -745,6 +778,35 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
 .cdot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);display:inline-block;margin-right:5px}.cdot.err{background:var(--red);box-shadow:0 0 6px var(--red)}
 .new-flash{position:fixed;top:58px;right:16px;background:var(--blue);color:#fff;font-family:var(--display);font-size:9px;letter-spacing:3px;padding:5px 12px;border-radius:2px;opacity:0;transition:opacity .25s;z-index:1000;pointer-events:none;box-shadow:0 0 16px rgba(74,158,255,.5)}
 .new-flash.show{opacity:1}
+@media(max-width:768px){
+  html,body{height:auto;overflow:auto;}
+  body{display:block;}
+  .header{padding:8px 14px;}
+  .header-right{gap:10px;}
+  #clock,#rt-label{display:none;}
+  .rt-badge{padding:3px 6px;}
+  .logout{font-size:7px;padding:3px 8px;}
+  .stats{grid-template-columns:repeat(2,1fr);}
+  .mob-tabs{display:flex;}
+  .mob-tab{flex:1;padding:10px;font-family:var(--display);font-size:9px;letter-spacing:2px;cursor:pointer;background:none;border:none;color:var(--text-dim);border-bottom:2px solid transparent;}
+  .mob-tab.active{color:var(--text-bright);border-bottom-color:var(--green);}
+  .main{display:block;background:none;overflow:visible;}
+  .feed-panel{height:60vh;overflow:hidden;}
+  .analysis{overflow-y:visible;display:none;}
+  body.show-analysis .feed-panel{display:none;}
+  body.show-analysis .analysis{display:block;min-height:60vh;}
+  .ev{display:flex;flex-wrap:wrap;padding:7px 14px;column-gap:8px;row-gap:0;}
+  .ev .badge{order:1;}
+  .ev-action{order:2;flex:1;min-width:0;}
+  .ev::after{content:'';flex:0 0 100%;height:3px;order:3;}
+  .ev-time{order:4;}
+  .ev-agent{order:5;flex:1;min-width:0;}
+  .ev-status{order:6;}
+  .ev-dur{order:7;}
+  .new-flash{top:44px;right:10px;}
+  .footer{flex-direction:column;gap:4px;padding:8px 14px;}
+  .footer-left{flex-direction:column;gap:3px;align-items:flex-start;}
+}
 </style>
 </head>
 <body>
@@ -766,6 +828,10 @@ body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradie
   <div class="stat s-green"><div class="stat-label">SUCCESS RATE</div><div class="stat-val" id="s-rate">—</div><div class="stat-hint">tool call accuracy</div></div>
   <div class="stat s-amber"><div class="stat-label">LOOPS DETECTED</div><div class="stat-val" id="s-loops">0</div><div class="stat-hint">infinite cycles caught</div></div>
   <div class="stat s-blue"><div class="stat-label">INSTANCE</div><div class="stat-val" style="font-size:15px;padding-top:6px" id="s-instance">—</div><div class="stat-hint" id="s-backend">__BACKEND__</div></div>
+</div>
+<div class="mob-tabs">
+  <button class="mob-tab active" id="tab-feed" onclick="mobTab('feed')">FEED</button>
+  <button class="mob-tab" id="tab-analysis" onclick="mobTab('analysis')">ANALYSIS</button>
 </div>
 <div class="main">
   <div class="feed-panel">
@@ -789,19 +855,21 @@ const SUPABASE_URL='__SUPABASE_URL__';const SUPABASE_KEY='__SUPABASE_KEY__';
 let events=[],eventCount=0,analysisTimer=null;
 function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'})+' ET';}
 setInterval(tick,1000);tick();
+function agentColor(id){const p=['var(--blue)','var(--purple)','var(--amber)','var(--green)','var(--cyan)'];if(!id||id==='—')return 'var(--text-dim)';let h=5381;for(let i=0;i<id.length;i++)h=((h<<5)+h)^id.charCodeAt(i);return p[Math.abs(h)%p.length];}
 function badge(type){const t=(type||'').toLowerCase();if(t.includes('tool'))return '<span class="badge b-tool">TOOL</span>';if(t.includes('decision'))return '<span class="badge b-decision">DECISION</span>';if(t.includes('error'))return '<span class="badge b-error">ERROR</span>';if(t.includes('thought')||t.includes('reason'))return '<span class="badge b-thought">THOUGHT</span>';if(t.includes('lifecycle'))return '<span class="badge b-lifecycle">LIFECYCLE</span>';if(t.includes('spawn'))return '<span class="badge b-spawn">SPAWN</span>';return '<span class="badge b-default">'+(type||'EVENT').toUpperCase().slice(0,8)+'</span>';}
 function fmtTime(ts){try{return new Date(ts).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});}catch{return '--:--:--';}}
 function fmtMs(ms){if(ms==null)return '';return ms<1000?ms+'ms':((ms/1000).toFixed(1))+'s';}
-function evRow(ev,isNew){const d=ev.data||{};const action=ev.action||d.action||d.tool||d.description||d.type||'—';const isErr=(ev.type||'').includes('error');return '<div class="ev'+(isNew?' new-ev':'')+'"><span class="ev-time">'+fmtTime(ev.timestamp||ev.createdat||ev.storedAt)+'</span>'+badge(ev.type)+'<span class="ev-agent">'+(ev.agentid||ev.agentId||'—')+'</span><span class="ev-action">'+action+'</span><span>'+(isErr?'<span class="err">\u2717</span>':'<span class="ok">\u2713</span>')+'</span><span class="ev-dur">'+fmtMs(ev.durationms||ev.durationMs||(d&&d.durationMs))+'</span></div>';}
+function evRow(ev,isNew){const d=ev.data||{};const action=ev.action||d.action||d.tool||d.description||d.type||'—';const isErr=(ev.type||'').includes('error');const agId=ev.agentid||ev.agentId||'—';return '<div class="ev'+(isNew?' new-ev':'')+'"><span class="ev-time">'+fmtTime(ev.timestamp||ev.createdat||ev.storedAt)+'</span>'+badge(ev.type)+'<span class="ev-agent" style="color:'+agentColor(agId)+'">'+agId+'</span><span class="ev-action">'+action+'</span><span class="ev-status">'+(isErr?'<span class="err">\u2717</span>':'<span class="ok">\u2713</span>')+'</span><span class="ev-dur">'+fmtMs(ev.durationms||ev.durationMs||(d&&d.durationMs))+'</span></div>';}
 function renderFeed(newIdx){const feed=document.getElementById('feed');const empty=document.getElementById('empty');document.getElementById('feed-count').textContent=eventCount+' events';document.getElementById('s-events').textContent=eventCount.toLocaleString();if(!events.length){empty.style.display='flex';return;}empty.style.display='none';feed.innerHTML=events.map((ev,i)=>evRow(ev,i===newIdx)).join('');if(newIdx===0)feed.scrollTop=0;}
 function flashNew(){const f=document.getElementById('new-flash');const d=document.getElementById('rt-dot');f.classList.add('show');d.classList.add('pulse');setTimeout(()=>{f.classList.remove('show');d.classList.remove('pulse');},1400);}
 function setConn(ok){document.getElementById('cdot').className='cdot'+(ok?'':' err');const lbl=document.getElementById('conn-label');lbl.textContent=ok?'CONNECTED':'DISCONNECTED';lbl.style.color=ok?'var(--green)':'var(--red)';}
 function setRT(s){const dot=document.getElementById('rt-dot');const lbl=document.getElementById('rt-label');const c={live:'var(--green)',connecting:'var(--amber)',error:'var(--red)'}[s]||'var(--red)';const l={live:'REALTIME',connecting:'CONNECTING',error:'OFFLINE'}[s]||'OFFLINE';dot.style.background=c;dot.style.boxShadow='0 0 6px '+c;lbl.textContent=l;lbl.style.color=c;}
+function mobTab(which){const a=which==='analysis';document.body.classList.toggle('show-analysis',a);document.getElementById('tab-feed').classList.toggle('active',!a);document.getElementById('tab-analysis').classList.toggle('active',a);}
 function renderAnalysis(a){if(!a)return;const rate=a.successRate;if(rate!=null){const pct=Math.round(rate*100);document.getElementById('a-rate').textContent=pct+'%';document.getElementById('s-rate').textContent=pct+'%';const bar=document.getElementById('a-bar');bar.style.width=pct+'%';bar.className='gauge-fill'+(pct<80?' red':pct<95?' amber':'');}document.getElementById('a-total').textContent=(a.totalToolCalls||a.totalEvents||0)+' total';const p=a.performanceMetrics||{};document.getElementById('a-p50').textContent=p.p50?((p.p50/1000).toFixed(1))+'s':'—';document.getElementById('a-p95').textContent=p.p95?((p.p95/1000).toFixed(1))+'s':'—';document.getElementById('a-loops').textContent=Array.isArray(a.loopsDetected)?a.loopsDetected.length:(a.loopsDetected??'0');document.getElementById('a-evts').textContent=a.totalEvents??'—';document.getElementById('s-loops').textContent=Array.isArray(a.loopsDetected)?a.loopsDetected.length:(a.loopsDetected??'0');const fails=a.failurePatterns||[];const fl=document.getElementById('fail-list');if(!fails.length){fl.innerHTML='<div style="font-size:11px;color:var(--text-dim)">No failures recorded \uD83E\uDD9E</div>';}else{const mx=Math.max(...fails.map(f=>f.count||1));fl.innerHTML=fails.slice(0,5).map(f=>'<div class="fail-row"><span class="fail-name">'+(f.pattern||f.type||'unknown')+'</span><div class="fail-bar"><div class="fail-fill" style="width:'+Math.round((f.count/mx)*100)+'%"></div></div><span class="fail-n">'+f.count+'</span></div>').join('');}const cost=a.costAnalysis||{};const total=cost.total||cost.totalCost;document.getElementById('cost-section').innerHTML=total!=null?'<div style="font-family:var(--display);font-weight:700;font-size:22px;color:var(--text-bright);margin-bottom:4px">$'+Number(total).toFixed(4)+'</div><div style="font-size:10px;color:var(--text-dim)">estimated total spend</div>':'<div style="font-size:11px;color:var(--text-dim)">No cost data available</div>';}
 function renderStats(s){if(!s)return;if(s.eventCount!=null){eventCount=s.eventCount;document.getElementById('s-events').textContent=eventCount.toLocaleString();}document.getElementById('s-instance').textContent=(s.instanceId||'—').replace('lobster-','').toUpperCase().slice(0,14);document.getElementById('s-backend').textContent=(s.backend||s.storageType||'—').toUpperCase();document.getElementById('f-instance').textContent='INSTANCE: '+(s.instanceId||'—');}
 function scheduleAnalysis(){clearTimeout(analysisTimer);analysisTimer=setTimeout(async()=>{try{const a=await fetch('/api/analyze').then(r=>r.json());if(!a.error)renderAnalysis(a);}catch(e){}try{const s=await fetch('/api/stats').then(r=>r.json());if(!s.error)renderStats(s);}catch(e){}},3000);}
 async function loadInitial(){try{const[sr,er,ar]=await Promise.allSettled([fetch('/api/stats').then(r=>r.json()),fetch('/api/events?limit=100').then(r=>r.json()),fetch('/api/analyze').then(r=>r.json())]);setConn(true);if(sr.status==='fulfilled'&&!sr.value.error)renderStats(sr.value);if(er.status==='fulfilled'&&Array.isArray(er.value)){events=er.value;eventCount=events.length;renderFeed(-1);}if(ar.status==='fulfilled'&&!ar.value.error)renderAnalysis(ar.value);document.getElementById('f-updated').textContent='LOADED '+new Date().toLocaleTimeString('en-US',{hour12:false});}catch(e){setConn(false);}}
-if(SUPABASE_URL&&SUPABASE_KEY){const{createClient}=supabase;const sb=createClient(SUPABASE_URL,SUPABASE_KEY);sb.channel('agent_events_rt').on('postgres_changes',{event:'INSERT',schema:'public',table:'agent_events'},payload=>{events.unshift(payload.new);if(events.length>200)events.pop();eventCount++;renderFeed(0);flashNew();scheduleAnalysis();document.getElementById('f-updated').textContent='LIVE '+new Date().toLocaleTimeString('en-US',{hour12:false});}).subscribe(status=>{if(status==='SUBSCRIBED')setRT('live');else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')setRT('error');else setRT('connecting');});}else{setRT('error');setInterval(async()=>{try{const er=await fetch('/api/events?limit=100').then(r=>r.json());if(Array.isArray(er)){events=er;eventCount=er.length;renderFeed(-1);}}catch(e){}},15000);}
+if(SUPABASE_URL&&SUPABASE_KEY){const{createClient}=supabase;const sb=createClient(SUPABASE_URL,SUPABASE_KEY);sb.channel('agent_events_rt').on('postgres_changes',{event:'INSERT',schema:'public',table:'agent_events'},payload=>{events.unshift(payload.new);if(events.length>200)events.pop();eventCount++;renderFeed(0);flashNew();if(window.innerWidth<=768)mobTab('feed');scheduleAnalysis();document.getElementById('f-updated').textContent='LIVE '+new Date().toLocaleTimeString('en-US',{hour12:false});}).subscribe(status=>{if(status==='SUBSCRIBED')setRT('live');else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')setRT('error');else setRT('connecting');});}else{setRT('error');setInterval(async()=>{try{const er=await fetch('/api/events?limit=100').then(r=>r.json());if(Array.isArray(er)){events=er;eventCount=er.length;renderFeed(-1);}}catch(e){}},15000);}
 loadInitial();setInterval(async()=>{try{const a=await fetch('/api/analyze').then(r=>r.json());if(!a.error)renderAnalysis(a);}catch(e){}},60000);
 <\/script>
 </body>
