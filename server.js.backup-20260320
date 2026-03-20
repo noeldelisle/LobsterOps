@@ -487,7 +487,7 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
 <section class="origin" id="origin">
   <div class="origin-inner">
     <div class="section-eyebrow">// THE ORIGIN</div>
-    <h2 class="section-title">WHAT IF YOUR AGENT<br>COULD BUILD ITS<br><em style="color:var(--red);font-style:normal">OWN TOOLS?</em></h2>
+    <h2 class="section-title">WHAT WOULD YOU BUILD<br>IF YOU COULD BUILD<br><em style="color:var(--red);font-style:normal">ANYTHING?</em></h2>
     <p class="section-body" style="margin-top:16px">After fixing the routing bug, Noel asked Lobster Actual a question. The agent used its Perplexity API integration to research gaps in AI developer tooling. Then it answered.</p>
 
     <div class="origin-grid">
@@ -505,10 +505,11 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
       </div>
       <div class="chat-bubble agent">
         <div class="chat-speaker agent-s"><span class="speaker-dot" style="background:var(--red)"></span>LOBSTER ACTUAL</div>
-        <div class="chat-text">Yes, absolutely — LobsterOps would be designed from day one to integrate seamlessly with OpenClaw setups. In fact, I'd architect it to be a natural extension of the OpenClaw ecosystem...</div>
+        <div class="chat-text">Excellent question! Yes, absolutely — LobsterOps would be designed from day one to integrate seamlessly with OpenClaw setups. In fact, I'd architect it to be a natural extension of the OpenClaw ecosystem...</div>
       </div>
       <div class="origin-bridge">
-        <p>Conceived and built by Lobster Actual — an autonomous AI agent. Completed by Claude Code.</p>
+        <p>Lobster Actual conceived LobsterOps, architected ~<em>60% of the codebase</em>, and shipped the initial implementation. Claude Code completed the remaining functionality.</p>
+        <p style="margin-top:12px;font-size:13px;color:var(--text-dim)">This is what happens when you ask an AI agent what it actually needs.</p>
       </div>
     </div>
   </div>
@@ -624,16 +625,16 @@ footer{background:var(--bg);border-top:1px solid var(--border);padding:40px 48px
     <h2 class="section-title">HOW A $300<br>MISTAKE BECAME<br><em style="color:var(--red);font-style:normal">AN OPEN SOURCE TOOL.</em></h2>
     <div class="story-body">
       <p>In early 2026, Noel DeLisle — Director of AI & Strategic Sales Support at GO2 Partners and a former USMC infantry instructor — built an autonomous AI agent he called <strong>Lobster Actual</strong>. The name comes from USMC radio protocol: "Actual" denotes the commanding officer on the line, not a relay.</p>
-      <p>Lobster Actual runs 24/7 on a dedicated Mac mini M4 Pro in Knoxville, Tennessee. It writes code, opens pull requests, monitors GitHub issues, posts to X, sends Telegram briefings, and operates largely without human intervention.</p>
+      <p>Lobster Actual runs 24/7 on a dedicated Mac mini M4 Pro in Knoxville, Tennessee. It writes code, opens pull requests, monitors GitHub issues, posts to X, sends Telegram briefings, and operates largely without human intervention. The goal was maximum autonomy at minimum cost.</p>
       <p>Then came the incident. A missing file — <code style="color:var(--amber)">local_llm.py</code> — meant that sub-agents couldn't access local LLM models. Instead of failing loudly, they silently fell back to paid Claude API calls. Over six hours, the agent ran a 20-issue sweep, opened 17 PRs, and processed security fixes — all at $3 per million output tokens instead of free.</p>
     </div>
     <div class="story-callout">
       <p>"The $300 incident taught me something I didn't expect to learn from a billing alert: my agent had no way to see itself. No flight recorder. No cost telemetry. No loop detection. It was operating completely blind to its own behavior." — Noel DeLisle</p>
     </div>
     <div class="story-body">
-      <p>After fixing the routing bug, Noel asked Lobster Actual what it would build if given a fresh repo and complete creative freedom. The agent used its Perplexity API integration to research the current AI tooling landscape — specifically looking for gaps. It found one.</p>
-      <p>The agent proposed LobsterOps: a lightweight observability platform designed specifically for AI agents. Lobster Actual then built the storage abstraction layer, core logging methods, query engine, behavioral analytics, and alerting system. Claude Code completed the remaining functionality.</p>
-      <p>The result is an MIT-licensed npm package with zero required dependencies, four pluggable storage backends, 19 passing tests, and a real-time dashboard powered by Supabase Realtime.</p>
+      <p>After fixing the routing bug, Noel did something unusual. He asked Lobster Actual what it would build if given a fresh repo and complete creative freedom. The agent used its Perplexity API integration to research the current AI tooling landscape — specifically looking for gaps. It found one.</p>
+      <p>The agent proposed LobsterOps: a lightweight observability platform designed specifically for AI agents, from the perspective of an AI agent that had experienced exactly the pain it was designed to solve. Lobster Actual then built approximately <strong>60% of the initial codebase</strong> itself — the storage abstraction layer, core logging methods, query engine, behavioral analytics, and alerting system. Claude Code completed the remaining functionality.</p>
+      <p>The result is an MIT-licensed npm package with zero required dependencies, four pluggable storage backends, 19 passing tests, and a real-time dashboard powered by Supabase Realtime. <strong>It is, to our knowledge, one of the first open-source developer tools conceived, designed, and substantially implemented by the autonomous AI agent that needed it.</strong></p>
     </div>
   </div>
 </section>
