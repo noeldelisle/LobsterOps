@@ -15,7 +15,7 @@ class PIIFilter {
     this.enabled = options.enabled !== false;
     this.replacement = options.replacement || '[REDACTED]';
 
-    const allPatterns = ['email', 'phone', 'ssn', 'creditCard', 'ipAddress', 'apiKey'];
+    const allPatterns = ['email', 'phone', 'ssn', 'creditCard', 'ipAddress', 'apiKey', 'apiKey2', 'apiKey3', 'apiKey4', 'apiKey5', 'bearerToken', 'tokenAssignment'];
     this.activePatterns = options.patterns || allPatterns;
 
     this.matchers = {
@@ -24,7 +24,13 @@ class PIIFilter {
       ssn: /\b\d{3}-\d{2}-\d{4}\b/g,
       creditCard: /\b(?:\d[ -]*?){13,19}\b/g,
       ipAddress: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g,
-      apiKey: /(?:sk|pk|key|token|api[_-]?key|bearer)[-_]?(?:[a-zA-Z0-9][-_]?){20,}/gi,
+      apiKey: /\b(sk_live_[a-zA-Z0-9]{20,})\b/g,
+      apiKey2: /\b(sk_test_[a-zA-Z0-9]{20,})\b/g,
+      apiKey3: /\b(pk_live_[a-zA-Z0-9]{20,})\b/g,
+      apiKey4: /\b(pk_test_[a-zA-Z0-9]{20,})\b/g,
+      apiKey5: /\b(api_key_[a-zA-Z0-9]{20,})\b/g,
+      bearerToken: /\b(bearer\s+[a-f0-9]{40,})\b/gi,
+      tokenAssignment: /\b(token["']?\s*[:=]\s*["']?[a-zA-Z0-9_-]{20,})\b/gi,
     };
   }
 

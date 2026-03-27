@@ -432,19 +432,16 @@ class SupabaseStorage extends StorageAdapter {
     if (!this.initialized) await this.init();
     
     try {
-      const { data, error } = await this._executeWithRetry(() =>
-        this.supabase
-          .from(this.tableName)
-          .select('*', { count: 'exact' })
-          .limit(0) // We only want the count
-      );
+      const { count, error } = await this.supabase
+        .from(this.tableName)
+        .select('id', { count: 'exact' });
       
       if (error) throw error;
       
       return {
         backend: 'supabase',
         tableName: this.tableName,
-        eventCount: data.count,
+        eventCount: count || 0,
         url: this.supabaseUrl
       };
     } catch (error) {
