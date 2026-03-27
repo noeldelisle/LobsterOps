@@ -171,6 +171,23 @@ async function runExample() {
     }
     console.log(`   Instance ID: ${updatedStats.instanceId}`);
     
+    // Export events to different formats
+    console.log(`\n📤 Exporting events...`);
+    
+    // Export to JSON (default)
+    const jsonExport = await ops.exportEvents('json');
+    console.log(`   JSON export: ${jsonExport.length} characters`);
+    
+    // Export to CSV
+    const csvExport = await ops.exportEvents('csv');
+    console.log(`   CSV export: ${csvExport.length} characters`);
+    
+    // Export to Markdown
+    const { Exporter } = require('./src/core/Exporter');
+    const events = await ops.getAgentTrace('research-agent-alpha');
+    const markdownExport = Exporter.toMarkdown(events);
+    console.log(`   Markdown export: ${markdownExport.length} characters`);
+    
     console.log(`\n✅ Example completed successfully!`);
     console.log(`💡 Try checking the './example-lobsterops.db' SQLite database file.`);
     console.log(`🔬 LobsterOps is now ready for AI agent observability in your projects!`);

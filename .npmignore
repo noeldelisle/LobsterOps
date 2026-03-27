@@ -1,0 +1,6 @@
+node_modules/
+tests/
+openclaw/
+*.test.js
+jest.config.js
+CONTRIBUTING.md

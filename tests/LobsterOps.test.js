@@ -18,7 +18,7 @@ describe('LobsterOps Core Functionality', () => {
     const fs = require('fs').promises;
     try {
       await fs.rm(testDir, { recursive: true, force: true });
-    } catch (e) {
+    } catch (_e) {
       // Ignore if directory doesn't exist
     }
 
@@ -38,7 +38,7 @@ describe('LobsterOps Core Functionality', () => {
     const fs = require('fs').promises;
     try {
       await fs.rm(testDir, { recursive: true, force: true });
-    } catch (e) {
+    } catch (_e) {
       // Ignore if directory doesn't exist
     }
   });
@@ -321,11 +321,11 @@ describe('LobsterOps Core Functionality', () => {
     test('should be able to cleanup old events', async () => {
       // This test mainly verifies the cleanup method doesn't throw
       // Actual age-based cleanup would require manipulating timestamps
-      const initialStats = await lobsterOps.getStats();
+      await lobsterOps.getStats();
 
       const cleanedCount = await lobsterOps.cleanupOld();
 
-      const finalStats = await lobsterOps.getStats();
+      await lobsterOps.getStats();
 
       expect(typeof cleanedCount).toBe('number');
       expect(cleanedCount >= 0).toBe(true);
@@ -871,7 +871,7 @@ describe('OpenClawInstrumentation', () => {
 
   beforeEach(async () => {
     const fs = require('fs').promises;
-    try { await fs.rm(testDir, { recursive: true, force: true }); } catch (e) {}
+    try { await fs.rm(testDir, { recursive: true, force: true }); } catch (_e) {}
     ops = new LobsterOps({ storageType: 'json', storageConfig: { dataDir: testDir } });
     await ops.init();
   });
@@ -879,7 +879,7 @@ describe('OpenClawInstrumentation', () => {
   afterEach(async () => {
     await ops.close();
     const fs = require('fs').promises;
-    try { await fs.rm(testDir, { recursive: true, force: true }); } catch (e) {}
+    try { await fs.rm(testDir, { recursive: true, force: true }); } catch (_e) {}
   });
 
   test('should create instrumentation and activate/deactivate', () => {

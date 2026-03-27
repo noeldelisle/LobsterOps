@@ -19,7 +19,7 @@ class StorageAdapter {
    * @param {Object} event - The agent event to store
    * @returns {Promise<string>} - Returns the event ID
    */
-  async saveEvent(event) {
+  async saveEvent(_event) {
     throw new Error('StorageAdapter.saveEvent() must be implemented by subclass');
   }
 
@@ -29,7 +29,7 @@ class StorageAdapter {
    * @param {Object} options - Pagination and sorting options
    * @returns {Promise<Array<Object>>} - Array of matching events
    */
-  async queryEvents(filter = {}, options = {}) {
+  async queryEvents(_filter = {}, _options = {}) {
     throw new Error('StorageAdapter.queryEvents() must be implemented by subclass');
   }
 
@@ -38,7 +38,7 @@ class StorageAdapter {
    * @param {string} eventId - The ID of the event to retrieve
    * @returns {Promise<Object|null>} - The event or null if not found
    */
-  async getEventById(eventId) {
+  async getEventById(_eventId) {
     throw new Error('StorageAdapter.getEventById() must be implemented by subclass');
   }
 
@@ -48,7 +48,7 @@ class StorageAdapter {
    * @param {Object} updates - The fields to update
    * @returns {Promise<boolean>} - True if successful
    */
-  async updateEvent(eventId, updates) {
+  async updateEvent(_eventId, _updates) {
     throw new Error('StorageAdapter.updateEvent() must be implemented by subclass');
   }
 
@@ -57,7 +57,7 @@ class StorageAdapter {
    * @param {Object} filter - Filter criteria for deletion
    * @returns {Promise<number>} - Number of events deleted
    */
-  async deleteEvents(filter) {
+  async deleteEvents(_filter) {
     throw new Error('StorageAdapter.deleteEvents() must be implemented by subclass');
   }
 

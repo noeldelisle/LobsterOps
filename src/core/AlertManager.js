@@ -101,7 +101,7 @@ class AlertManager {
         for (const listener of this.listeners) {
           try {
             listener(alert);
-          } catch (e) {
+          } catch (_e) {
             // Don't let listener errors break alert processing
           }
         }

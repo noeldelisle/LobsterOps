@@ -5,6 +5,9 @@ const { DebugConsole } = require('./src/core/DebugConsole');
 const { Analytics } = require('./src/core/Analytics');
 const { AlertManager } = require('./src/core/AlertManager');
 const { OpenClawInstrumentation } = require('./src/core/OpenClawInstrumentation');
+const { EventLoggers } = require('./src/core/EventLoggers');
+const { QueryEngine } = require('./src/core/QueryEngine');
+const { Operations } = require('./src/core/Operations');
 const { StorageFactory } = require('./src/storage/StorageFactory');
 const { StorageAdapter } = require('./src/storage/StorageAdapter');
 const { JsonFileStorage } = require('./src/storage/JsonFileStorage');
@@ -19,6 +22,9 @@ module.exports = {
   Analytics,
   AlertManager,
   OpenClawInstrumentation,
+  EventLoggers,
+  QueryEngine,
+  Operations,
   StorageFactory,
   StorageAdapter,
   JsonFileStorage,
