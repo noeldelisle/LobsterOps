@@ -205,7 +205,7 @@ class SupabaseStorage extends StorageAdapter {
       }
       
       // Apply sorting
-      const ascending = sortOrder.toLowerCase() === 'asc';
+      const ascending = sortOrder.toLowerCase() !== 'desc';
       query = query.order(sortBy, { ascending });
       
       // Apply pagination
