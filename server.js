@@ -11,6 +11,8 @@ const PORT = process.env.PORT || 3000;
 
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || '';
+const { createClient } = require('@supabase/supabase-js');
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD || 'lobster2026';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'lobsteractual-ops-secret-' + Math.random();
 
@@ -271,6 +273,69 @@ app.get('/api/analyze', requireAuth, async (req, res) => {
     const clean = JSON.parse(JSON.stringify(result, (k, v) => (typeof v === 'number' && isNaN(v)) ? null : v));
     if (Array.isArray(clean.loopsDetected)) clean.loopsDetected = clean.loopsDetected.length;
     res.json(clean);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/v2/stats', requireAuth, async (req, res) => {
+  if (!sb) return res.status(503).json({ error: 'No Supabase' });
+  try {
+    const { count } = await sb.from('agent_events_v2').select('*', { count: 'exact', head: true });
+    res.json({ eventCount: count || 0, instanceId: 'lobster-ops', backend: 'supabase-v2' });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/v2/events', requireAuth, async (req, res) => {
+  if (!sb) return res.status(503).json({ error: 'No Supabase' });
+  try {
+    const limit = Math.min(parseInt(req.query.limit) || 100, 500);
+    const { data, error } = await sb
+      .from('agent_events_v2')
+      .select('*')
+      .order('timestamp', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    res.json(data || []);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/v2/analyze', requireAuth, async (req, res) => {
+  if (!sb) return res.status(503).json({ error: 'No Supabase' });
+  try {
+    const { data, error } = await sb
+      .from('agent_events_v2')
+      .select('*')
+      .order('timestamp', { ascending: false })
+      .limit(1000);
+    if (error) throw error;
+    const events = data || [];
+    const totalEvents = events.length;
+    const lifecycleEnd = events.filter(e => e.action === 'lifecycle_end');
+    const lifecycleError = events.filter(e => e.action === 'lifecycle_error');
+    const lifecycleStart = events.filter(e => e.action === 'lifecycle_start');
+    const totalRuns = lifecycleStart.length;
+    const failedRuns = lifecycleError.length;
+    const successRate = totalRuns > 0 ? (totalRuns - failedRuns) / totalRuns : null;
+    const durations = lifecycleEnd.map(e => e.duration_ms).filter(d => typeof d === 'number' && d > 0).sort((a, b) => a - b);
+    const p50 = durations.length > 0 ? durations[Math.floor(durations.length * 0.5)] : null;
+    const p95 = durations.length > 0 ? durations[Math.floor(durations.length * 0.95)] : null;
+    const thinkingChunks = events.filter(e => e.action === 'thinking_chunk');
+    const costs = events.map(e => e.cost_usd).filter(c => typeof c === 'number');
+    const totalCost = costs.reduce((a, b) => a + b, 0);
+    const failureByAgent = {};
+    lifecycleError.forEach(e => {
+      const agent = e.agent_id || 'unknown';
+      failureByAgent[agent] = (failureByAgent[agent] || 0) + 1;
+    });
+    const failurePatterns = Object.entries(failureByAgent).map(([pattern, count]) => ({ pattern, count }));
+    res.json({
+      totalEvents,
+      successRate,
+      totalToolCalls: lifecycleEnd.length,
+      loopsDetected: thinkingChunks.length,
+      performanceMetrics: { p50, p95, avgDurationMs: durations.length > 0 ? durations.reduce((a,b)=>a+b,0)/durations.length : null },
+      costAnalysis: { total: totalCost },
+      failurePatterns
+    });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -904,7 +969,7 @@ function agentColor(id){const p=['var(--blue)','var(--purple)','var(--amber)','v
 function badge(type){const t=(type||'').toLowerCase();if(t.includes('tool'))return '<span class="badge b-tool">TOOL</span>';if(t.includes('decision'))return '<span class="badge b-decision">DECISION</span>';if(t.includes('error'))return '<span class="badge b-error">ERROR</span>';if(t.includes('thought')||t.includes('reason'))return '<span class="badge b-thought">THOUGHT</span>';if(t.includes('lifecycle'))return '<span class="badge b-lifecycle">LIFECYCLE</span>';if(t.includes('spawn'))return '<span class="badge b-spawn">SPAWN</span>';return '<span class="badge b-default">'+(type||'EVENT').toUpperCase().slice(0,8)+'</span>';}
 function fmtTime(ts){try{return new Date(ts).toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});}catch{return '--:--:--';}}
 function fmtMs(ms){if(ms==null)return '';return ms<1000?ms+'ms':((ms/1000).toFixed(1))+'s';}
-function evRow(ev,isNew){const d=ev.data||{};const action=ev.action||d.action||d.tool||d.description||d.type||'—';const isErr=(ev.type||'').includes('error');const agId=ev.agentid||ev.agentId||'—';return '<div class="ev'+(isNew?' new-ev':'')+'"><span class="ev-time">'+fmtTime(ev.timestamp||ev.createdat||ev.storedAt)+'</span>'+badge(ev.type)+'<span class="ev-agent" style="color:'+agentColor(agId)+'">'+agId+'</span><span class="ev-action">'+action+'</span><span class="ev-status">'+(isErr?'<span class="err">\u2717</span>':'<span class="ok">\u2713</span>')+'</span><span class="ev-dur">'+fmtMs(ev.durationms||ev.durationMs||(d&&d.durationMs))+'</span></div>';}
+function evRow(ev,isNew){const d=ev.data||{};const action=ev.action||d.action||d.tool||d.description||'—';const isErr=(ev.type||'').includes('error')||(ev.action||'').includes('error');const agId=ev.agent_id||ev.agentid||ev.agentId||'—';return '<div class="ev'+(isNew?' new-ev':'')+'"><span class="ev-time">'+fmtTime(ev.timestamp||ev.createdat||ev.storedAt)+'</span>'+badge(ev.type||ev.action)+'<span class="ev-agent" style="color:'+agentColor(agId)+'">'+agId+'</span><span class="ev-action">'+action+'</span><span class="ev-status">'+(isErr?'<span class="err">\u2717</span>':'<span class="ok">\u2713</span>')+'</span><span class="ev-dur">'+fmtMs(ev.duration_ms||ev.durationms||ev.durationMs||(d&&d.durationMs))+'</span></div>';}
 function renderFeed(newIdx){const feed=document.getElementById('feed');const empty=document.getElementById('empty');document.getElementById('feed-count').textContent=eventCount+' events';document.getElementById('s-events').textContent=eventCount.toLocaleString();if(!events.length){empty.style.display='flex';return;}empty.style.display='none';feed.innerHTML=events.map((ev,i)=>evRow(ev,i===newIdx)).join('');if(newIdx===0)feed.scrollTop=0;}
 function flashNew(){const f=document.getElementById('new-flash');const d=document.getElementById('rt-dot');f.classList.add('show');d.classList.add('pulse');setTimeout(()=>{f.classList.remove('show');d.classList.remove('pulse');},1400);}
 function setConn(ok){document.getElementById('cdot').className='cdot'+(ok?'':' err');const lbl=document.getElementById('conn-label');lbl.textContent=ok?'CONNECTED':'DISCONNECTED';lbl.style.color=ok?'var(--green)':'var(--red)';}
@@ -912,10 +977,10 @@ function setRT(s){const dot=document.getElementById('rt-dot');const lbl=document
 function mobTab(which){const a=which==='analysis';document.body.classList.toggle('show-analysis',a);document.getElementById('tab-feed').classList.toggle('active',!a);document.getElementById('tab-analysis').classList.toggle('active',a);}
 function renderAnalysis(a){if(!a)return;const rate=a.successRate;if(rate!=null){const pct=Math.round(rate*100);document.getElementById('a-rate').textContent=pct+'%';document.getElementById('s-rate').textContent=pct+'%';const bar=document.getElementById('a-bar');bar.style.width=pct+'%';bar.className='gauge-fill'+(pct<80?' red':pct<95?' amber':'');}document.getElementById('a-total').textContent=(a.totalToolCalls||a.totalEvents||0)+' total';const p=a.performanceMetrics||{};document.getElementById('a-p50').textContent=p.p50?((p.p50/1000).toFixed(1))+'s':'—';document.getElementById('a-p95').textContent=p.p95?((p.p95/1000).toFixed(1))+'s':'—';document.getElementById('a-loops').textContent=Array.isArray(a.loopsDetected)?a.loopsDetected.length:(a.loopsDetected??'0');document.getElementById('a-evts').textContent=a.totalEvents??'—';document.getElementById('s-loops').textContent=Array.isArray(a.loopsDetected)?a.loopsDetected.length:(a.loopsDetected??'0');const fails=a.failurePatterns||[];const fl=document.getElementById('fail-list');if(!fails.length){fl.innerHTML='<div style="font-size:11px;color:var(--text-dim)">No failures recorded \uD83E\uDD9E</div>';}else{const mx=Math.max(...fails.map(f=>f.count||1));fl.innerHTML=fails.slice(0,5).map(f=>'<div class="fail-row"><span class="fail-name">'+(f.pattern||f.type||'unknown')+'</span><div class="fail-bar"><div class="fail-fill" style="width:'+Math.round((f.count/mx)*100)+'%"></div></div><span class="fail-n">'+f.count+'</span></div>').join('');}const cost=a.costAnalysis||{};const total=cost.total||cost.totalCost;document.getElementById('cost-section').innerHTML=total!=null?'<div style="font-family:var(--display);font-weight:700;font-size:22px;color:var(--text-bright);margin-bottom:4px">$'+Number(total).toFixed(4)+'</div><div style="font-size:10px;color:var(--text-dim)">estimated total spend</div>':'<div style="font-size:11px;color:var(--text-dim)">No cost data available</div>';}
 function renderStats(s){if(!s)return;if(s.eventCount!=null){eventCount=s.eventCount;document.getElementById('s-events').textContent=eventCount.toLocaleString();}document.getElementById('s-instance').textContent=(s.instanceId||'—').replace('lobster-','').toUpperCase().slice(0,14);document.getElementById('s-backend').textContent=(s.backend||s.storageType||'—').toUpperCase();document.getElementById('f-instance').textContent='INSTANCE: '+(s.instanceId||'—');}
-function scheduleAnalysis(){clearTimeout(analysisTimer);analysisTimer=setTimeout(async()=>{try{const a=await fetch('/api/analyze').then(r=>r.json());if(!a.error)renderAnalysis(a);}catch(e){}try{const s=await fetch('/api/stats').then(r=>r.json());if(!s.error)renderStats(s);}catch(e){}},3000);}
-async function loadInitial(){try{const[sr,er,ar]=await Promise.allSettled([fetch('/api/stats').then(r=>r.json()),fetch('/api/events?limit=100').then(r=>r.json()),fetch('/api/analyze').then(r=>r.json())]);setConn(true);if(sr.status==='fulfilled'&&!sr.value.error)renderStats(sr.value);if(er.status==='fulfilled'&&Array.isArray(er.value)){events=er.value;eventCount=events.length;renderFeed(-1);}if(ar.status==='fulfilled'&&!ar.value.error)renderAnalysis(ar.value);document.getElementById('f-updated').textContent='LOADED '+new Date().toLocaleTimeString('en-US',{hour12:false});}catch(e){setConn(false);}}
-if(SUPABASE_URL&&SUPABASE_KEY){const{createClient}=supabase;const sb=createClient(SUPABASE_URL,SUPABASE_KEY);sb.channel('agent_events_rt').on('postgres_changes',{event:'INSERT',schema:'public',table:'agent_events'},payload=>{events.unshift(payload.new);if(events.length>200)events.pop();eventCount++;renderFeed(0);flashNew();if(window.innerWidth<=768)mobTab('feed');scheduleAnalysis();document.getElementById('f-updated').textContent='LIVE '+new Date().toLocaleTimeString('en-US',{hour12:false});}).subscribe(status=>{if(status==='SUBSCRIBED')setRT('live');else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')setRT('error');else setRT('connecting');});}else{setRT('error');setInterval(async()=>{try{const er=await fetch('/api/events?limit=100').then(r=>r.json());if(Array.isArray(er)){events=er;eventCount=er.length;renderFeed(-1);}}catch(e){}},15000);}
-loadInitial();setInterval(async()=>{try{const a=await fetch('/api/analyze').then(r=>r.json());if(!a.error)renderAnalysis(a);}catch(e){}},60000);
+function scheduleAnalysis(){clearTimeout(analysisTimer);analysisTimer=setTimeout(async()=>{try{const a=await fetch('/api/v2/analyze').then(r=>r.json());if(!a.error)renderAnalysis(a);}catch(e){}try{const s=await fetch('/api/v2/stats').then(r=>r.json());if(!s.error)renderStats(s);}catch(e){}},3000);}
+async function loadInitial(){try{const[sr,er,ar]=await Promise.allSettled([fetch('/api/v2/stats').then(r=>r.json()),fetch('/api/v2/events?limit=100').then(r=>r.json()),fetch('/api/v2/analyze').then(r=>r.json())]);setConn(true);if(sr.status==='fulfilled'&&!sr.value.error)renderStats(sr.value);if(er.status==='fulfilled'&&Array.isArray(er.value)){events=er.value;eventCount=events.length;renderFeed(-1);}if(ar.status==='fulfilled'&&!ar.value.error)renderAnalysis(ar.value);document.getElementById('f-updated').textContent='LOADED '+new Date().toLocaleTimeString('en-US',{hour12:false});}catch(e){setConn(false);}}
+if(SUPABASE_URL&&SUPABASE_KEY){const{createClient}=supabase;const sb=createClient(SUPABASE_URL,SUPABASE_KEY);sb.channel('agent_events_rt').on('postgres_changes',{event:'INSERT',schema:'public',table:'agent_events_v2'},payload=>{events.unshift(payload.new);if(events.length>200)events.pop();eventCount++;renderFeed(0);flashNew();if(window.innerWidth<=768)mobTab('feed');scheduleAnalysis();document.getElementById('f-updated').textContent='LIVE '+new Date().toLocaleTimeString('en-US',{hour12:false});}).subscribe(status=>{if(status==='SUBSCRIBED')setRT('live');else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')setRT('error');else setRT('connecting');});}else{setRT('error');setInterval(async()=>{try{const er=await fetch('/api/events?limit=100').then(r=>r.json());if(Array.isArray(er)){events=er;eventCount=er.length;renderFeed(-1);}}catch(e){}},15000);}
+loadInitial();setInterval(async()=>{try{const a=await fetch('/api/v2/analyze').then(r=>r.json());if(!a.error)renderAnalysis(a);}catch(e){}},60000);
 <\/script>
 </body>
 </html>`;
