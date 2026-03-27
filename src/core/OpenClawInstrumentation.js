@@ -14,6 +14,7 @@ class OpenClawInstrumentation {
    * @param {boolean} options.captureReasoningTraces - Capture reasoning/thought events (default: true)
    * @param {boolean} options.captureFileChanges - Capture file system changes (default: false)
    * @param {boolean} options.captureGitOps - Capture git operations (default: false)
+   * @param {Object} options.eventNameMap - Optional map of logical event names to OpenClaw event names
    */
   constructor(lobsterOps, options = {}) {
     this.ops = lobsterOps;
@@ -27,6 +28,25 @@ class OpenClawInstrumentation {
     };
     this.active = false;
     this._hooks = [];
+
+    // Event name mapping for adaptability
+    this.eventNameMap = options.eventNameMap || {
+      toolCall: 'tool:call',
+      agentSpawn: 'agent:spawn',
+      agentStart: 'agent:start',
+      agentStop: 'agent:stop',
+      agentThought: 'agent:thought',
+      fileChange: 'file:change',
+      gitOperation: 'git:operation',
+    };
+  }
+
+  /**
+   * Get the expected event names based on the current eventNameMap
+   * @returns {Object} - The event name mapping
+   */
+  getExpectedEventNames() {
+    return { ...this.eventNameMap };
   }
 
   /**
@@ -49,7 +69,7 @@ class OpenClawInstrumentation {
   deactivate() {
     this.active = false;
     for (const unhook of this._hooks) {
-      try { unhook(); } catch (e) { /* ignore */ }
+      try { unhook(); } catch (_e) { /* ignore */ }
     }
     this._hooks = [];
   }
@@ -196,28 +216,28 @@ class OpenClawInstrumentation {
     };
 
     if (this.options.captureToolCalls) {
-      hookEvent('tool:call', (data) => this.instrumentToolCall(data));
+      hookEvent(this.eventNameMap.toolCall, (data) => this.instrumentToolCall(data));
     }
 
     if (this.options.captureSpawns) {
-      hookEvent('agent:spawn', (data) => this.instrumentSpawn(data));
+      hookEvent(this.eventNameMap.agentSpawn, (data) => this.instrumentSpawn(data));
     }
 
     if (this.options.captureLifecycle) {
-      hookEvent('agent:start', (data) => this.instrumentLifecycle({ ...data, action: 'start' }));
-      hookEvent('agent:stop', (data) => this.instrumentLifecycle({ ...data, action: 'stop' }));
+      hookEvent(this.eventNameMap.agentStart, (data) => this.instrumentLifecycle({ ...data, action: 'start' }));
+      hookEvent(this.eventNameMap.agentStop, (data) => this.instrumentLifecycle({ ...data, action: 'stop' }));
     }
 
     if (this.options.captureReasoningTraces) {
-      hookEvent('agent:thought', (data) => this.instrumentThought(data));
+      hookEvent(this.eventNameMap.agentThought, (data) => this.instrumentThought(data));
     }
 
     if (this.options.captureFileChanges) {
-      hookEvent('file:change', (data) => this.instrumentFileChange(data));
+      hookEvent(this.eventNameMap.fileChange, (data) => this.instrumentFileChange(data));
     }
 
     if (this.options.captureGitOps) {
-      hookEvent('git:operation', (data) => this.instrumentGitOp(data));
+      hookEvent(this.eventNameMap.gitOperation, (data) => this.instrumentGitOp(data));
     }
   }
 }

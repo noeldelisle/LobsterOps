@@ -232,7 +232,7 @@ class SQLiteStorage extends StorageAdapter {
         let parsedData;
         try {
           parsedData = JSON.parse(row.data);
-        } catch (e) {
+        } catch (_e) {
           // If JSON parsing fails, return raw data
           parsedData = row.data;
         }
@@ -272,7 +272,7 @@ class SQLiteStorage extends StorageAdapter {
       let parsedData;
       try {
         parsedData = JSON.parse(row.data);
-      } catch (e) {
+      } catch (_e) {
         parsedData = row.data;
       }
       

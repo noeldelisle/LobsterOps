@@ -1,10 +1,7 @@
 const { StorageFactory } = require('../storage/StorageFactory');
-const { v4: uuidv4 } = require('uuid');
-const { PIIFilter } = require('./PIIFilter');
-const { Exporter } = require('./Exporter');
-const { DebugConsole } = require('./DebugConsole');
-const { Analytics } = require('./Analytics');
-const { AlertManager } = require('./AlertManager');
+const { EventLoggers } = require('./EventLoggers');
+const { QueryEngine } = require('./QueryEngine');
+const { Operations } = require('./Operations');
 
 /**
  * LobsterOps - AI Agent Observability & Debug Console
@@ -42,23 +39,30 @@ class LobsterOps {
     this.storage = null;
     this.initialized = false;
 
-    // PII filtering
-    this.piiFilter = new PIIFilter(options.piiFiltering || {});
+    // Initialize EventLoggers with PII filter
+    this.eventLoggers = new EventLoggers({
+      instanceId: this.instanceId,
+      enabled: this.enabled,
+      piiFiltering: options.piiFiltering || {}
+    });
 
-    // Alert manager
-    this.alertManager = new AlertManager();
+    // Initialize QueryEngine
+    this.queryEngine = new QueryEngine({
+      enabled: this.enabled
+    });
 
-    // Bind methods for easier use
-    this.logEvent = this.logEvent.bind(this);
-    this.logThought = this.logThought.bind(this);
-    this.logToolCall = this.logToolCall.bind(this);
-    this.logDecision = this.logDecision.bind(this);
-    this.logError = this.logError.bind(this);
-    this.logSpawning = this.logSpawning.bind(this);
-    this.queryEvents = this.queryEvents.bind(this);
-    this.getEvent = this.getEvent.bind(this);
-    this.getAgentTrace = this.getAgentTrace.bind(this);
-    this.getRecentActivity = this.getRecentActivity.bind(this);
+    // Initialize Operations
+    this.operations = new Operations({
+      instanceId: this.instanceId,
+      storageType: this.storageType,
+      enabled: this.enabled
+    });
+
+    // PII filter reference for external access
+    this.piiFilter = this.eventLoggers.piiFilter;
+
+    // Alert manager reference
+    this.alertManager = this.eventLoggers.alertManager;
   }
 
   /**
@@ -78,50 +82,27 @@ class LobsterOps {
       // Initialize the storage backend
       await this.storage.init();
       
+      // Wire up modules to storage
+      this.eventLoggers.setStorage(this.storage);
+      this.queryEngine.setStorage(this.storage);
+      this.operations.setStorage(this.storage);
+      
       this.initialized = true;
     } catch (error) {
       throw new Error(`Failed to initialize LobsterOps: ${error.message}`);
     }
   }
 
+  // --- Delegated EventLogger methods ---
+
   /**
    * Log a general agent event
    * @param {Object} event - The agent event to log
    * @param {Object} options - Additional options
-   * @returns {Promise<string>} - The ID of the logged event
+   * @returns {Promise<string|null>} - The ID of the logged event
    */
   async logEvent(event, options = {}) {
-    if (!this.enabled) {
-      return null; // Silently ignore if disabled
-    }
-    
-    if (!this.initialized) {
-      await this.init();
-    }
-    
-    try {
-      // Apply PII filtering
-      const filteredEvent = this.piiFilter.filter(event);
-
-      // Enrich the event with metadata
-      const enrichedEvent = {
-        ...filteredEvent,
-        id: event.id || uuidv4(),
-        timestamp: event.timestamp || new Date().toISOString(),
-        lobsterOpsInstanceId: this.instanceId,
-        loggedAt: new Date().toISOString(),
-        ...options
-      };
-
-      // Evaluate alert rules
-      this.alertManager.evaluate(enrichedEvent);
-
-      // Save to storage
-      const eventId = await this.storage.saveEvent(enrichedEvent);
-      return eventId;
-    } catch (error) {
-      throw new Error(`Failed to log event: ${error.message}`);
-    }
+    return this.eventLoggers.logEvent(event, options);
   }
 
   /**
@@ -131,13 +112,7 @@ class LobsterOps {
    * @returns {Promise<string>} - The ID of the logged thought
    */
   async logThought(thought, options = {}) {
-    return this.logEvent({
-      type: 'agent-thought',
-      ...thought
-    }, {
-      category: 'reasoning',
-      ...options
-    });
+    return this.eventLoggers.logThought(thought, options);
   }
 
   /**
@@ -147,13 +122,7 @@ class LobsterOps {
    * @returns {Promise<string>} - The ID of the logged tool call
    */
   async logToolCall(toolCall, options = {}) {
-    return this.logEvent({
-      type: 'tool-call',
-      ...toolCall
-    }, {
-      category: 'action',
-      ...options
-    });
+    return this.eventLoggers.logToolCall(toolCall, options);
   }
 
   /**
@@ -163,13 +132,7 @@ class LobsterOps {
    * @returns {Promise<string>} - The ID of the logged decision
    */
   async logDecision(decision, options = {}) {
-    return this.logEvent({
-      type: 'agent-decision',
-      ...decision
-    }, {
-      category: 'decision',
-      ...options
-    });
+    return this.eventLoggers.logDecision(decision, options);
   }
 
   /**
@@ -179,14 +142,7 @@ class LobsterOps {
    * @returns {Promise<string>} - The ID of the logged error
    */
   async logError(error, options = {}) {
-    return this.logEvent({
-      type: 'agent-error',
-      ...error
-    }, {
-      category: 'error',
-      severity: options.severity || 'medium',
-      ...options
-    });
+    return this.eventLoggers.logError(error, options);
   }
 
   /**
@@ -196,13 +152,7 @@ class LobsterOps {
    * @returns {Promise<string>} - The ID of the logged spawn event
    */
   async logSpawning(spawnInfo, options = {}) {
-    return this.logEvent({
-      type: 'agent-spawn',
-      ...spawnInfo
-    }, {
-      category: 'lifecycle',
-      ...options
-    });
+    return this.eventLoggers.logSpawning(spawnInfo, options);
   }
 
   /**
@@ -212,14 +162,10 @@ class LobsterOps {
    * @returns {Promise<string>} - The ID of the logged lifecycle event
    */
   async logLifecycle(lifecycleInfo, options = {}) {
-    return this.logEvent({
-      type: 'agent-lifecycle',
-      ...lifecycleInfo
-    }, {
-      category: 'lifecycle',
-      ...options
-    });
+    return this.eventLoggers.logLifecycle(lifecycleInfo, options);
   }
+
+  // --- Delegated QueryEngine methods ---
 
   /**
    * Query events with filtering options
@@ -236,11 +182,7 @@ class LobsterOps {
       await this.init();
     }
     
-    try {
-      return await this.storage.queryEvents(filter, options);
-    } catch (error) {
-      throw new Error(`Failed to query events: ${error.message}`);
-    }
+    return this.queryEngine.queryEvents(filter, options);
   }
 
   /**
@@ -257,11 +199,7 @@ class LobsterOps {
       await this.init();
     }
     
-    try {
-      return await this.storage.getEventById(eventId);
-    } catch (error) {
-      throw new Error(`Failed to get event: ${error.message}`);
-    }
+    return this.queryEngine.getEvent(eventId);
   }
 
   /**
@@ -279,11 +217,7 @@ class LobsterOps {
       await this.init();
     }
     
-    try {
-      return await this.storage.updateEvent(eventId, updates);
-    } catch (error) {
-      throw new Error(`Failed to update event: ${error.message}`);
-    }
+    return this.queryEngine.updateEvent(eventId, updates);
   }
 
   /**
@@ -308,26 +242,6 @@ class LobsterOps {
   }
 
   /**
-   * Clean up old events based on retention policy
-   * @returns {Promise<number>} - Number of events removed
-   */
-  async cleanupOld() {
-    if (!this.enabled) {
-      return 0;
-    }
-    
-    if (!this.initialized) {
-      await this.init();
-    }
-    
-    try {
-      return await this.storage.cleanupOld();
-    } catch (error) {
-      throw new Error(`Failed to cleanup old events: ${error.message}`);
-    }
-  }
-
-  /**
    * Get a complete trace of an agent's activity
    * @param {string} agentId - The ID of the agent to trace
    * @param {Object} options - Trace options (time range, limit, etc.)
@@ -342,26 +256,7 @@ class LobsterOps {
       await this.init();
     }
     
-    try {
-      const traceOptions = {
-        agentIds: [agentId],
-        limit: options.limit || 1000,
-        offset: options.offset || 0,
-        sortBy: 'timestamp',
-        sortOrder: options.sortOrder || 'asc', // Chronological by default for traces
-        ...options
-      };
-      
-      // Remove agentIds from options since we handle it separately
-      delete traceOptions.agentIds;
-      
-      return await this.queryEvents(
-        { agentId },
-        traceOptions
-      );
-    } catch (error) {
-      throw new Error(`Failed to get agent trace: ${error.message}`);
-    }
+    return this.queryEngine.getAgentTrace(agentId, options);
   }
 
   /**
@@ -378,19 +273,25 @@ class LobsterOps {
       await this.init();
     }
     
-    try {
-      const activityOptions = {
-        limit: options.limit || 50,
-        offset: options.offset || 0,
-        sortBy: 'timestamp',
-        sortOrder: 'desc', // Most recent first
-        ...options
-      };
-      
-      return await this.queryEvents({}, activityOptions);
-    } catch (error) {
-      throw new Error(`Failed to get recent activity: ${error.message}`);
+    return this.queryEngine.getRecentActivity(options);
+  }
+
+  // --- Delegated Operations methods ---
+
+  /**
+   * Clean up old events based on retention policy
+   * @returns {Promise<number>} - Number of events removed
+   */
+  async cleanupOld() {
+    if (!this.enabled) {
+      return 0;
     }
+    
+    if (!this.initialized) {
+      await this.init();
+    }
+    
+    return this.operations.cleanupOld();
   }
 
   /**
@@ -406,17 +307,7 @@ class LobsterOps {
       await this.init();
     }
     
-    try {
-      const stats = await this.storage.getStats();
-      return {
-        enabled: true,
-        instanceId: this.instanceId,
-        storageType: this.storageType,
-        ...stats
-      };
-    } catch (error) {
-      throw new Error(`Failed to get stats: ${error.message}`);
-    }
+    return this.operations.getStats();
   }
 
   /**
@@ -428,14 +319,8 @@ class LobsterOps {
       return;
     }
     
-    try {
-      if (this.storage) {
-        await this.storage.close();
-      }
-      this.initialized = false;
-    } catch (error) {
-      throw new Error(`Failed to close LobsterOps: ${error.message}`);
-    }
+    await this.operations.close();
+    this.initialized = false;
   }
 
   /**
@@ -446,18 +331,15 @@ class LobsterOps {
    * @returns {Promise<string>} - Exported data as string
    */
   async exportEvents(format = 'json', filter = {}, options = {}) {
-    const events = await this.queryEvents(filter, { limit: options.limit || 10000, ...options });
-
-    switch (format.toLowerCase()) {
-      case 'csv':
-        return Exporter.toCSV(events, options);
-      case 'markdown':
-      case 'md':
-        return Exporter.toMarkdown(events, options);
-      case 'json':
-      default:
-        return Exporter.toJSON(events, options);
+    if (!this.enabled) {
+      return '[]';
     }
+    
+    if (!this.initialized) {
+      await this.init();
+    }
+    
+    return this.operations.exportEvents(format, filter, options);
   }
 
   /**
@@ -467,8 +349,15 @@ class LobsterOps {
    * @returns {Promise<DebugConsole>} - Interactive debug console
    */
   async createDebugConsole(agentId, options = {}) {
-    const events = await this.getAgentTrace(agentId, options);
-    return new DebugConsole(events);
+    if (!this.enabled) {
+      return null;
+    }
+    
+    if (!this.initialized) {
+      await this.init();
+    }
+    
+    return this.operations.createDebugConsole(agentId, options);
   }
 
   /**
@@ -478,8 +367,15 @@ class LobsterOps {
    * @returns {Promise<Object>} - Analytics report
    */
   async analyze(filter = {}, options = {}) {
-    const events = await this.queryEvents(filter, { limit: options.limit || 10000, ...options });
-    return Analytics.analyze(events);
+    if (!this.enabled) {
+      return { error: 'LobsterOps is disabled' };
+    }
+    
+    if (!this.initialized) {
+      await this.init();
+    }
+    
+    return this.operations.analyze(filter, options);
   }
 
   /**

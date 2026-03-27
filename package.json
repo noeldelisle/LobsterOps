@@ -22,6 +22,8 @@
   },
   "homepage": "https://github.com/noeldelisle/LobsterOps#readme",
   "devDependencies": {
+    "eslint": "^10.1.0",
+    "eslint-plugin-jest": "^29.15.1",
     "jest": "^29.7.0"
   },
   "dependencies": {

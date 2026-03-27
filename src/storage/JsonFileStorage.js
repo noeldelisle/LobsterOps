@@ -101,7 +101,7 @@ class JsonFileStorage extends StorageAdapter {
 
       // Get today's events
       const todayFilename = this._getTodayFilename();
-      let events = await this._readEventsFromFile(todayFilename);
+      const events = await this._readEventsFromFile(todayFilename);
       
       // Add the new event
       events.push(enrichedEvent);
@@ -196,7 +196,7 @@ class JsonFileStorage extends StorageAdapter {
     // Clamp start to reasonable minimum (avoid checking years of empty files)
     const clampedStart = new Date(Math.max(start.getTime(), Date.now() - (this.maxAgeDays + 1) * 24 * 60 * 60 * 1000));
     
-    let current = new Date(clampedStart);
+    const current = new Date(clampedStart);
     while (current <= end) {
       files.push(this._getFilenameForDate(new Date(current)));
       current.setDate(current.getDate() + 1);
@@ -241,8 +241,7 @@ class JsonFileStorage extends StorageAdapter {
       const filesToCheck = this._getFilesInDateRange(null, new Date());
       
       for (const filename of filesToCheck) {
-        const filepath = path.join(this.dataDir, filename);
-        let events = await this._readEventsFromFile(filename);
+        const events = await this._readEventsFromFile(filename);
         
         const eventIndex = events.findIndex(e => e.id === eventId);
         if (eventIndex !== -1) {
@@ -280,7 +279,6 @@ class JsonFileStorage extends StorageAdapter {
       const filesToCheck = this._getFilesInDateRange(startDate, endDate);
       
       for (const filename of filesToCheck) {
-        const filepath = path.join(this.dataDir, filename);
         let events = await this._readEventsFromFile(filename);
         
         const initialLength = events.length;
@@ -377,7 +375,7 @@ class JsonFileStorage extends StorageAdapter {
           const data = await fs.readFile(filepath, 'utf8');
           const events = JSON.parse(data);
           totalEvents += Array.isArray(events) ? events.length : 0;
-        } catch (e) {
+        } catch (_e) {
           // If we can't parse JSON, skip counting events for this file
         }
       }

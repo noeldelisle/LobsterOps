@@ -48,7 +48,7 @@ class SupabaseStorage extends StorageAdapter {
     
     try {
       // Try to select from the table to see if it exists
-      const { data, error } = await this.supabase
+      const { error } = await this.supabase
         .from(this.tableName)
         .select('id')
         .limit(1);
@@ -61,7 +61,7 @@ class SupabaseStorage extends StorageAdapter {
       // If no error, table exists
       
       this.tableExists = true;
-    } catch (error) {
+    } catch (_error) {
       // If we can't determine table existence, try to create it
       // (handles permission issues where we can't check but can create)
       await this._createTable();
@@ -381,7 +381,7 @@ class SupabaseStorage extends StorageAdapter {
       const countToDelete = countData.length;
       
       // Then perform the deletion
-      const { data, error } = await this._executeWithRetry(() => query);
+      const { error } = await this._executeWithRetry(() => query);
       
       if (error) throw error;
       
